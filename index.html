@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مهارة | Mahara</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cdefs%3E%3ClinearGradient id='bgGradB' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23146A5B'/%3E%3Cstop offset='100%25' stop-color='%230B4038'/%3E%3C/linearGradient%3E%3ClinearGradient id='ringGradB' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23E0B25A'/%3E%3Cstop offset='100%25' stop-color='%23C68A2E'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='0' y='0' width='200' height='200' rx='46' fill='url(%23bgGradB)'/%3E%3Ccircle cx='80' cy='100' r='40' fill='none' stroke='url(%23ringGradB)' stroke-width='13'/%3E%3Ccircle cx='120' cy='100' r='40' fill='none' stroke='url(%23ringGradB)' stroke-width='13'/%3E%3Ccircle cx='100' cy='100' r='9' fill='%23F5EBD8'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#FBF6EC; --surface:#FFFFFF; --primary:#0F5C4E; --primary-dark:#0B4038;
+    --accent:#C68A2E; --text:#23201B; --muted:#8A8270; --border:#E4D9C2; --danger:#B0452E; --radius:8px;
+  }
+  body.dark{
+    --bg:#14201C; --surface:#1C2A25; --primary:#3FA98D; --primary-dark:#2E8670;
+    --accent:#E0B25A; --text:#EDE7D8; --muted:#96A199; --border:#2E3B35; --danger:#E0806A;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,"Segoe UI",Tahoma,Geneva,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;min-height:100vh;transition:background .2s,color .2s;}
+  #root{max-width:480px;margin:0 auto;min-height:100vh;background:var(--bg);display:flex;flex-direction:column;}
+  img{max-width:100%;display:block;}
+
+  .header{padding:16px 16px 12px;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:10;}
+  .header-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+  .brand{display:flex;flex-direction:column;}
+  .brand-name{font-size:24px;font-weight:800;color:var(--primary);letter-spacing:-0.5px;display:flex;align-items:center;gap:6px;}
+  .brand-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;}
+  .brand-mark{width:30px;height:30px;flex-shrink:0;}
+  .tagline{font-size:12px;color:var(--muted);margin-top:2px;}
+  .header-actions{display:flex;align-items:center;gap:6px;}
+  .icon-btn{
+    border:1px solid var(--border);background:var(--surface);border-radius:8px;width:34px;height:34px;
+    display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;color:var(--text);flex-shrink:0;
+  }
+  .profile-chip{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);
+    border-radius:20px;padding:6px 12px;font-size:12px;cursor:pointer;white-space:nowrap;color:var(--text);}
+  .profile-chip b{color:var(--primary);font-weight:700;}
+  .tabs{display:flex;gap:4px;margin-top:12px;}
+  .tab{flex:1;text-align:center;padding:9px 4px;font-size:13px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer;}
+  .tab.active{color:var(--primary);border-bottom-color:var(--primary);}
+
+  .content{flex:1;padding:14px 16px 90px;}
+  .search-input,.field input,.field textarea,.field select{
+    width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:var(--radius);
+    font-size:14px;background:var(--surface);color:var(--text);font-family:inherit;
+  }
+  .search-input:focus,.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--primary);}
+  .chips{display:flex;gap:7px;overflow-x:auto;margin:12px 0 4px;padding-bottom:4px;}
+  .chips::-webkit-scrollbar{display:none;}
+  .chip{flex-shrink:0;padding:6px 13px;border-radius:20px;border:1px solid var(--border);font-size:12px;
+    color:var(--text);background:var(--surface);cursor:pointer;white-space:nowrap;}
+  .chip.active{background:var(--primary);border-color:var(--primary);color:#fff;}
+
+  .service-row{padding:13px 2px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;gap:10px;}
+  .service-row:active{background:rgba(15,92,78,0.06);}
+  .service-thumb{width:56px;height:56px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--border);}
+  .service-thumb-placeholder{width:56px;height:56px;border-radius:8px;background:var(--border);flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;font-size:20px;}
+  .service-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;}
+  .service-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .service-name{font-size:14.5px;font-weight:700;color:var(--text);}
+  .service-price{font-size:14px;font-weight:800;color:var(--accent);white-space:nowrap;}
+  .service-meta{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);}
+  .tag{background:var(--border);color:var(--primary-dark);border-radius:5px;padding:2px 7px;font-size:11px;font-weight:600;}
+  .service-desc{font-size:12.5px;color:var(--muted);line-height:1.5;overflow:hidden;text-overflow:ellipsis;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+
+  .empty{text-align:center;padding:50px 20px;color:var(--muted);}
+  .empty-icon{font-size:32px;margin-bottom:10px;}
+  .empty-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:5px;}
+  .empty-sub{font-size:13px;line-height:1.6;}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 18px;border-radius:var(--radius);
+    font-size:14.5px;font-weight:700;border:none;cursor:pointer;font-family:inherit;width:100%;}
+  .btn-primary{background:var(--primary);color:#fff;}
+  .btn-primary:active{background:var(--primary-dark);}
+  .btn-secondary{background:var(--surface);color:var(--primary);border:1px solid var(--primary);}
+  .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+  .btn-danger{background:transparent;color:var(--danger);border:1px solid var(--danger);}
+  .link-btn{color:var(--primary);font-size:13px;font-weight:700;background:none;border:none;font-family:inherit;
+    padding:0;cursor:pointer;text-decoration:underline;}
+
+  .back-link{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:13.5px;margin-bottom:14px;cursor:pointer;}
+  .detail-title{font-size:19px;font-weight:800;margin-bottom:8px;}
+  .detail-provider{font-size:13px;color:var(--muted);margin-bottom:14px;}
+  .detail-image{width:100%;border-radius:var(--radius);margin-bottom:14px;max-height:220px;object-fit:cover;}
+  .detail-price-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .detail-price{font-size:19px;font-weight:800;color:var(--accent);}
+  .detail-desc{font-size:14px;line-height:1.8;color:var(--text);margin-bottom:22px;white-space:pre-wrap;}
+
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:13px;font-weight:700;margin-bottom:6px;color:var(--text);}
+  .field textarea{resize:vertical;min-height:110px;line-height:1.6;}
+  .word-count{font-size:12px;margin-top:5px;color:var(--muted);}
+  .word-count.ok{color:var(--primary);font-weight:700;}
+  .word-count.low{color:var(--danger);}
+  .radio-group{display:flex;gap:10px;}
+  .radio-option{flex:1;border:1px solid var(--border);border-radius:var(--radius);padding:12px;text-align:center;
+    cursor:pointer;font-size:13px;font-weight:600;}
+  .radio-option.selected{border-color:var(--primary);background:rgba(15,92,78,0.08);color:var(--primary);}
+
+  .my-service-row{border:1px solid var(--border);border-radius:var(--radius);padding:13px;margin-bottom:10px;
+    background:var(--surface);display:flex;gap:10px;}
+  .my-service-body{flex:1;min-width:0;}
+  .my-service-actions{display:flex;gap:8px;margin-top:10px;}
+  .my-service-actions .btn{padding:8px 10px;font-size:12px;}
+
+  .order-row{border:1px solid var(--border);border-radius:var(--radius);padding:13px;margin-bottom:10px;background:var(--surface);}
+  .order-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .order-service{font-weight:700;font-size:14px;}
+  .status-badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;}
+  .status-pending{background:#F6E9CF;color:#8A5A16;}
+  .status-in_progress{background:#DCEAE4;color:#0B4038;}
+  .status-done{background:#E1E9D6;color:#4A6B2A;}
+  body.dark .status-pending{background:#4A3B1C;color:#F0C878;}
+  body.dark .status-in_progress{background:#1F3A32;color:#7FD9BE;}
+  body.dark .status-done{background:#2A3820;color:#B7D18E;}
+  .order-sub{font-size:12px;color:var(--muted);margin-bottom:8px;}
+  .order-section-title{font-size:13px;font-weight:700;color:var(--muted);margin:18px 0 8px;}
+
+  .auth-wrap{padding:44px 22px;}
+  .onboard-logo{font-size:32px;font-weight:800;color:var(--primary);margin-bottom:6px;text-align:center;}
+  .onboard-tag{font-size:13.5px;color:var(--muted);margin-bottom:30px;line-height:1.7;text-align:center;}
+  .auth-form{text-align:start;}
+  .auth-switch{text-align:center;margin-top:16px;}
+
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--primary-dark);color:#fff;
+    padding:11px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:100;box-shadow:0 4px 14px rgba(0,0,0,0.25);
+    max-width:90%;text-align:center;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+(function(){
+  const DICT = {
+    tagline:{ar:'منصة مواهب السودان', en:"Sudan's talent marketplace"},
+    onboardTag:{ar:'منصة تجمع أصحاب المهارات في السودان مع من يحتاج إلى خدماتهم.', en:"A platform connecting Sudan's talented people with those who need their services."},
+    tabHome:{ar:'الرئيسية', en:'Home'},
+    tabMyServices:{ar:'خدماتي', en:'My Services'},
+    tabMyOrders:{ar:'طلباتي', en:'My Orders'},
+    loginTitle:{ar:'تسجيل الدخول', en:'Log in'},
+    signupTitle:{ar:'إنشاء حساب جديد', en:'Create an account'},
+    switchToSignup:{ar:'مستخدم جديد؟ أنشئ حسابًا', en:'New here? Create an account'},
+    switchToLogin:{ar:'لديك حساب؟ سجّل الدخول', en:'Already have an account? Log in'},
+    nameLabel:{ar:'الاسم', en:'Name'},
+    emailLabel:{ar:'البريد الإلكتروني', en:'Email'},
+    passwordLabel:{ar:'كلمة المرور', en:'Password'},
+    confirmPasswordLabel:{ar:'تأكيد كلمة المرور', en:'Confirm password'},
+    whatsappLabel:{ar:'رقم الواتساب (اختياري)', en:'WhatsApp number (optional)'},
+    roleQuestion:{ar:'كيف تريد استخدام التطبيق؟', en:'How will you use the app?'},
+    roleClient:{ar:'عميل', en:'Client'},
+    roleClientSub:{ar:'أبحث عن خدمة', en:'Looking for a service'},
+    roleFreelancer:{ar:'مستقل', en:'Freelancer'},
+    roleFreelancerSub:{ar:'أقدّم خدمة', en:'Offering a service'},
+    loginBtn:{ar:'دخول', en:'Log in'},
+    signupBtn:{ar:'إنشاء الحساب', en:'Create account'},
+    logoutHint:{ar:'انقر لتسجيل الخروج', en:'Tap to log out'},
+    searchPlaceholder:{ar:'ابحث عن خدمة...', en:'Search for a service...'},
+    all:{ar:'الكل', en:'All'},
+    noResultsTitle:{ar:'لا توجد خدمات مطابقة', en:'No matching services'},
+    noResultsSub:{ar:'حاول تغيير كلمة البحث أو التصنيف.', en:'Try a different search term or category.'},
+    addServiceBtn:{ar:'+ أضف خدمة جديدة', en:'+ Add new service'},
+    noServicesTitle:{ar:'لم تقم بإضافة أي خدمة بعد', en:"You haven't added any services yet"},
+    noServicesSub:{ar:'انقر على "أضف خدمة جديدة" أدناه وابدأ بعرض أعمالك.', en:'Tap "Add new service" below to start listing your work.'},
+    editBtn:{ar:'تعديل', en:'Edit'},
+    deleteBtn:{ar:'حذف', en:'Delete'},
+    serviceNameLabel:{ar:'اسم الخدمة', en:'Service name'},
+    categoryLabel:{ar:'التصنيف', en:'Category'},
+    priceLabel:{ar:'السعر (ج.س)', en:'Price (SDG)'},
+    descLabel:{ar:'وصف الخدمة (100 كلمة على الأقل)', en:'Service description (at least 100 words)'},
+    imageLabel:{ar:'رابط صورة للخدمة (اختياري)', en:'Service image URL (optional)'},
+    saveChangesBtn:{ar:'حفظ التعديلات', en:'Save changes'},
+    publishBtn:{ar:'نشر الخدمة', en:'Publish service'},
+    backBtn:{ar:'→ رجوع', en:'← Back'},
+    priceWord:{ar:'السعر', en:'Price'},
+    orderBtn:{ar:'اطلب الخدمة', en:'Request service'},
+    ownServiceNote:{ar:'هذه خدمتك، يمكنك إدارتها من تبويب "خدماتي".', en:'This is your own service — manage it from "My Services".'},
+    ordersAsClientTitle:{ar:'الخدمات التي طلبتها', en:'Services you requested'},
+    ordersAsProviderTitle:{ar:'الطلبات الواردة على خدماتك', en:'Requests on your services'},
+    noOrdersTitle:{ar:'لم تطلب أي خدمة بعد', en:"You haven't requested any service yet"},
+    noOrdersSub:{ar:'انتقل إلى "الرئيسية" وابحث عن خدمة تناسبك.', en:'Go to "Home" and find a service you like.'},
+    statusPending:{ar:'بانتظار الموافقة', en:'Awaiting approval'},
+    statusInProgress:{ar:'قيد التنفيذ', en:'In progress'},
+    statusDone:{ar:'تم الإنجاز', en:'Completed'},
+    clientWord:{ar:'العميل', en:'Client'},
+    providerWord:{ar:'مقدم الخدمة', en:'Provider'},
+    savedSuccess:{ar:'تم الحفظ بنجاح', en:'Saved successfully'},
+    deletedService:{ar:'تم حذف الخدمة', en:'Service deleted'},
+    statusUpdated:{ar:'تم تحديث حالة الطلب', en:'Order status updated'},
+    orderSuccess:{ar:'تم إرسال طلبك بنجاح', en:'Your request was sent successfully'},
+    fillName:{ar:'يرجى إدخال اسمك أولاً', en:'Please enter your name first'},
+    fillServiceName:{ar:'يرجى إدخال اسم الخدمة', en:'Enter the service name'},
+    fillDesc:{ar:'يرجى إدخال وصف للخدمة', en:'Enter a service description'},
+    descTooShort:{ar:'يجب ألا يقل الوصف عن 100 كلمة', en:'Description must be at least 100 words'},
+    fillPrice:{ar:'يرجى إدخال سعر صحيح', en:'Enter a valid price'},
+    invalidEmail:{ar:'يرجى إدخال بريد إلكتروني صحيح', en:'Enter a valid email address'},
+    shortPassword:{ar:'يجب ألا تقل كلمة المرور عن 6 أحرف', en:'Password must be at least 6 characters'},
+    passwordMismatch:{ar:'كلمتا المرور غير متطابقتين', en:'Passwords do not match'},
+    emailTaken:{ar:'هذا البريد الإلكتروني مسجَّل مسبقًا', en:'This email is already registered'},
+    wrongCredentials:{ar:'البريد الإلكتروني أو كلمة المرور غير صحيحة', en:'Incorrect email or password'},
+    wordsUnit:{ar:'كلمة', en:'words'},
+    rateService:{ar:'قيّم الخدمة', en:'Rate service'},
+    yourRating:{ar:'تقييمك', en:'Your rating'},
+    commentOptional:{ar:'تعليق (اختياري)', en:'Comment (optional)'},
+    submitReview:{ar:'إرسال التقييم', en:'Submit review'},
+    reviewSubmitted:{ar:'شكرًا لتقييمك', en:'Thanks for your review'},
+    reviewsTitle:{ar:'التقييمات', en:'Reviews'},
+    noReviewsYet:{ar:'لا توجد تقييمات بعد', en:'No reviews yet'},
+    notificationsTitle:{ar:'الإشعارات', en:'Notifications'},
+    noNotifications:{ar:'لا توجد إشعارات بعد', en:'No notifications yet'},
+    markAllRead:{ar:'تحديد الكل كمقروء', en:'Mark all as read'},
+    tabPortfolio:{ar:'معرض أعمالي', en:'My Portfolio'},
+    portfolioTitle:{ar:'معرض الأعمال', en:'Portfolio'},
+    addPortfolioItem:{ar:'+ أضف عملاً جديدًا', en:'+ Add new work'},
+    noPortfolioTitle:{ar:'لم تتم إضافة أي أعمال بعد', en:'No portfolio items yet'},
+    noPortfolioSub:{ar:'أضف نماذج من أعمالك السابقة لتعزيز ثقة العملاء بك.', en:'Add samples of your previous work to build client trust.'},
+    portfolioItemTitleLabel:{ar:'عنوان العمل', en:'Work title'},
+    portfolioItemDescLabel:{ar:'وصف مختصر', en:'Short description'},
+    portfolioItemLinkLabel:{ar:'رابط (اختياري)', en:'Link (optional)'},
+    portfolioItemImageLabel:{ar:'رابط صورة (اختياري)', en:'Image URL (optional)'},
+    savePortfolioItem:{ar:'حفظ', en:'Save'},
+    viewProfile:{ar:'عرض الملف الشخصي', en:'View profile'},
+    providerProfileTitle:{ar:'الملف الشخصي لمقدم الخدمة', en:'Provider profile'},
+    servicesOffered:{ar:'الخدمات المقدَّمة', en:'Services offered'},
+    fillPortfolioTitle:{ar:'يرجى إدخال عنوان العمل', en:'Enter a work title'},
+    viewLink:{ar:'عرض الرابط', en:'View link'},
+    openChat:{ar:'المراسلة', en:'Message'},
+    conversationTitle:{ar:'المحادثة', en:'Conversation'},
+    typeMessagePlaceholder:{ar:'اكتب رسالتك هنا...', en:'Type your message...'},
+    sendBtn:{ar:'إرسال', en:'Send'},
+    noMessagesYet:{ar:'لا توجد رسائل بعد، ابدأ المحادثة.', en:'No messages yet — start the conversation.'},
+    paymentSectionTitle:{ar:'الدفع', en:'Payment'},
+    paymentInfoLabel:{ar:'بيانات استلام الدفع (تظهر للعملاء)', en:'Payment receiving details (shown to clients)'},
+    paymentInfoPlaceholder:{ar:'مثال: بنكك - 0912345678 - محمد الأمين', en:'e.g. Bankak - 0912345678 - Mohamed Alameen'},
+    savePaymentInfo:{ar:'حفظ بيانات الدفع', en:'Save payment details'},
+    paymentInstructionsTitle:{ar:'يرجى تحويل المبلغ إلى:', en:'Please send the payment to:'},
+    noPaymentInfoSet:{ar:'لم يقم مقدم الخدمة بإضافة بيانات استلام الدفع بعد. يرجى التواصل معه مباشرة.', en:"The provider hasn't added payment details yet. Please contact them directly."},
+    transactionRefLabel:{ar:'رقم العملية / الإشعار', en:'Transaction reference'},
+    iHavePaid:{ar:'لقد قمت بالتحويل', en:"I've made the payment"},
+    paymentAwaitingConfirm:{ar:'بانتظار تأكيد الاستلام من مقدم الخدمة', en:'Awaiting confirmation from the provider'},
+    paymentConfirmedLabel:{ar:'تم تأكيد استلام الدفع', en:'Payment confirmed'},
+    confirmReceiptBtn:{ar:'تأكيد استلام الدفع', en:'Confirm payment received'},
+    referenceWord:{ar:'رقم مرجعي', en:'Reference'},
+    paymentSubmittedToast:{ar:'تم إرسال تأكيد التحويل', en:'Payment confirmation sent'},
+    paymentConfirmedToast:{ar:'تم تأكيد استلام الدفع', en:'Payment receipt confirmed'},
+    fillReference:{ar:'يرجى إدخال رقم العملية أولاً', en:'Please enter the transaction reference first'},
+    notPaidYet:{ar:'لم يتم الدفع بعد', en:'Not paid yet'},
+    completionRateLabel:{ar:'نسبة إنجاز الطلبات', en:'Order completion rate'},
+    avgResponseLabel:{ar:'متوسط وقت الرد', en:'Average response time'},
+    notEnoughData:{ar:'لا توجد بيانات كافية بعد', en:'Not enough data yet'},
+    ordersWord:{ar:'طلب', en:'orders'},
+    reportBtn:{ar:'🚩 إبلاغ', en:'🚩 Report'},
+    reportTitle:{ar:'الإبلاغ عن مشكلة', en:'Report an issue'},
+    reportReasonLabel:{ar:'سبب الإبلاغ', en:'Reason for report'},
+    reportDetailsLabel:{ar:'تفاصيل إضافية (اختياري)', en:'Additional details (optional)'},
+    submitReport:{ar:'إرسال البلاغ', en:'Submit report'},
+    reportSubmitted:{ar:'تم إرسال بلاغك، سيتم مراجعته', en:'Your report has been submitted for review'},
+    reasonInappropriate:{ar:'محتوى غير لائق', en:'Inappropriate content'},
+    reasonFraud:{ar:'نصب أو احتيال', en:'Fraud or scam'},
+    reasonImpersonation:{ar:'انتحال شخصية', en:'Impersonation'},
+    reasonQuality:{ar:'الخدمة لا تطابق الوصف', en:'Service does not match description'},
+    reasonOther:{ar:'سبب آخر', en:'Other reason'},
+    reportsAdminTitle:{ar:'البلاغات الواردة', en:'Reports'},
+    markReviewed:{ar:'تحديد كمُراجَع', en:'Mark as reviewed'},
+    noReports:{ar:'لا توجد بلاغات', en:'No reports'},
+    reportedItemWord:{ar:'العنصر المُبلَّغ عنه', en:'Reported item'},
+    reportedByWord:{ar:'المُبلِّغ', en:'Reported by'},
+    reviewedLabel:{ar:'تمت المراجعة', en:'Reviewed'},
+    adminStatsTitle:{ar:'إحصائيات التطبيق', en:'App Statistics'},
+    totalUsers:{ar:'إجمالي المستخدمين', en:'Total users'},
+    totalFreelancers:{ar:'عدد المستقلين', en:'Freelancers'},
+    totalClients:{ar:'عدد العملاء', en:'Clients'},
+    totalServices:{ar:'إجمالي الخدمات', en:'Total services'},
+    totalOrders:{ar:'إجمالي الطلبات', en:'Total orders'},
+    totalReviews:{ar:'إجمالي التقييمات', en:'Total reviews'},
+    totalMessages:{ar:'إجمالي الرسائل', en:'Total messages'},
+    openReportsStat:{ar:'بلاغات مفتوحة', en:'Open reports'},
+    lastActivityLabel:{ar:'آخر نشاط مسجَّل', en:'Last recorded activity'},
+    noActivityYet:{ar:'لا يوجد نشاط بعد', en:'No activity yet'},
+    forgotPassword:{ar:'نسيت كلمة المرور؟', en:'Forgot password?'},
+    networkError:{ar:'تعذّر الاتصال بالخادم، حاول مرة أخرى', en:'Could not reach the server, please try again'},
+    resetContactAdmin:{ar:'لإعادة تعيين كلمة المرور تواصل مع إدارة مهارة', en:'To reset your password, please contact Mahara support'},
+    resetPasswordTitle:{ar:'إعادة تعيين كلمة المرور', en:'Reset password'},
+    newPasswordLabel:{ar:'كلمة المرور الجديدة', en:'New password'},
+    resetPasswordBtn:{ar:'تحديث كلمة المرور', en:'Update password'},
+    continueBtn:{ar:'متابعة', en:'Continue'},
+    emailNotFound:{ar:'لا يوجد حساب بهذا البريد الإلكتروني', en:'No account found with this email'},
+    passwordResetSuccess:{ar:'تم تحديث كلمة المرور بنجاح، يمكنك تسجيل الدخول الآن', en:'Password updated — you can now log in'},
+  };
+  function tr(key){ return (DICT[key] && DICT[key][lang]) || key; }
+
+  const CATEGORIES = [
+    {id:'design', label:{ar:'تصميم', en:'Design'}, icon:'🎨'},
+    {id:'dev', label:{ar:'برمجة وتطوير', en:'Development'}, icon:'💻'},
+    {id:'writing', label:{ar:'كتابة وترجمة', en:'Writing & Translation'}, icon:'✍️'},
+    {id:'marketing', label:{ar:'تسويق رقمي', en:'Digital Marketing'}, icon:'📱'},
+    {id:'video', label:{ar:'فيديو ومونتاج', en:'Video Editing'}, icon:'🎬'},
+    {id:'teaching', label:{ar:'تعليم ودروس', en:'Tutoring'}, icon:'📚'},
+    {id:'data', label:{ar:'إدخال بيانات', en:'Data Entry'}, icon:'🗂️'},
+    {id:'other', label:{ar:'أخرى', en:'Other'}, icon:'⭐'},
+  ];
+  function catInfo(id){ return CATEGORIES.find(c=>c.id===id) || CATEGORIES[CATEGORIES.length-1]; }
+
+  const SEED_SERVICES = [
+    {id:'s1', name:'تصميم شعار وهوية بصرية', category:'design', price:15000, image:'',
+     description:'تصميم شعار احترافي مصحوب بدليل للألوان والخطوط، يناسب المشاريع الناشئة والصفحات التجارية. يتم العمل خطوة بخطوة بدءًا من الفكرة الأولية وصولًا إلى التسليم النهائي، مع مراعاة هوية المشروع والجمهور المستهدف لضمان أن يعبّر الشعار عن العلامة التجارية بشكل صحيح ويبقى راسخًا في أذهان الناس. يشمل التسليم جميع الصيغ اللازمة للطباعة والاستخدام الرقمي، إضافة إلى نسخة قابلة للتعديل. كما تُقدَّم جلسة مراجعة مجانية لإجراء أي تعديلات بسيطة بعد التسليم الأول، وذلك ضمن إطار زمني مناسب لا يستغرق وقتًا طويلاً.',
+     ownerId:'seed1', ownerName:'محمد الأمين', ownerWhatsapp:'249900000001'},
+    {id:'s2', name:'تطوير مواقع بسيطة وسريعة', category:'dev', price:40000, image:'',
+     description:'بناء موقع تعريفي خفيف وسريع التحميل، يناسب حتى الأجهزة ذات الإمكانيات المحدودة والاتصال الضعيف بالإنترنت. تُستخدم أحدث الأدوات بأسلوب مبسّط بحيث يفتح الموقع بسرعة لدى أي مستخدم بغض النظر عن نوع جهازه أو سرعة اتصاله بالشبكة. تشمل الخدمة تصميم الواجهة، وربط الموقع بالنطاق (الدومين)، وشرح كيفية التعديل عليه لاحقًا في حال الرغبة في إضافة محتوى جديد دون الحاجة إلى مبرمج في كل مرة. كما يمكن تقديم المساعدة في اختيار استضافة مناسبة وبسعر معقول يتلاءم مع الميزانية المتاحة.',
+     ownerId:'seed2', ownerName:'سارة عثمان', ownerWhatsapp:'249900000002'},
+    {id:'s3', name:'ترجمة عربي - إنجليزي', category:'writing', price:5000, image:'',
+     description:'ترجمة دقيقة للمستندات والمقالات والأبحاث، من العربية إلى الإنجليزية والعكس، مع مراعاة السياق والمعنى وليس الترجمة الحرفية فقط. تتوفر خبرة في ترجمة الأوراق الأكاديمية والتقارير الرسمية والمحتوى التسويقي، ويتم تسليم العمل في الموعد المتفق عليه مع مراجعة نهائية للتأكد من خلوّ النص من أي أخطاء إملائية أو لغوية. في حال كان المستند طويلاً، يمكن تقسيمه على دفعات لتتمكن من مراجعة الأجزاء الأولى في وقت مبكر.',
+     ownerId:'seed3', ownerName:'ياسر إبراهيم', ownerWhatsapp:'249900000003'},
+    {id:'s4', name:'دروس خصوصية في الرياضيات', category:'teaching', price:3000, image:'',
+     description:'دروس عبر الإنترنت لطلاب المرحلة الثانوية، تتضمن شرحًا مبسطًا ومتابعة شخصية إلى أن يتم استيعاب المادة بشكل جيد. يتم التركيز أولاً على أساسيات المنهج، ثم الانتقال تدريجيًا إلى المسائل الأصعب، مع حل واجبات وتمارين إضافية بين الحصص لترسيخ الفهم. يمكن أيضًا عقد جلسات مراجعة مكثفة قبل الامتحانات، ومتابعة مستوى الطالب بشكل دوري مع ولي الأمر عند الرغبة في ذلك.',
+     ownerId:'seed4', ownerName:'منى الطيب', ownerWhatsapp:'249900000004'},
+  ];
+
+  const STATUS_LABELS = {pending:'statusPending', in_progress:'statusInProgress', done:'statusDone'};
+  const REPORT_REASONS = [
+    {id:'inappropriate', label:'reasonInappropriate'},
+    {id:'fraud', label:'reasonFraud'},
+    {id:'impersonation', label:'reasonImpersonation'},
+    {id:'quality', label:'reasonQuality'},
+    {id:'other', label:'reasonOther'},
+  ];
+  const ADMIN_EMAIL = 'maharasdn@gmail.com';
+
+  let lang = 'ar';
+  let darkMode = false;
+  let profile = null;
+  let services = [];
+  let orders = [];
+  let users = [];
+  let reviews = [];
+  let notifications = [];
+  let messages = [];
+  let reports = [];
+  let view = 'loading';
+  let authMode = 'login';
+  let selectedServiceId = null;
+  let editingServiceId = null;
+  let filterCategory = 'all';
+  let searchQuery = '';
+  let toastMsg = '';
+  let toastTimer = null;
+  let reviewOrderId = null;
+  let rvRating = 5;
+  let rvComment = '';
+  let pfTitle='', pfDesc='', pfLink='', pfImage='';
+  let editingPortfolioId = null;
+  let viewingProviderId = null;
+  let chatOrderId = null;
+  let chatText = '';
+  let paymentRefDrafts = {};
+  let pmInfoDraft = '';
+  let reportTargetType = null;
+  let reportTargetId = null;
+  let reportTargetName = null;
+  let rpReason = REPORT_REASONS[0].id;
+  let rpDetails = '';
+
+  let authName='', authEmail='', authPassword='', authConfirmPassword='', authWhatsapp='', authRole='client';
+  let resetStage='email';
+  let rsEmail='', rsNewPassword='', rsConfirmPassword='';
+  let sfName='', sfCategory=CATEGORIES[0].id, sfPrice='', sfDesc='', sfImage='';
+
+  const root = document.getElementById('root');
+
+  function uid(){ return 'id-' + Date.now() + '-' + Math.random().toString(36).slice(2,8); }
+  function escapeHtml(s){ return (s||'').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function formatPrice(p){
+    const n = Number(p).toLocaleString('en-US');
+    return lang==='ar' ? n + ' ج.س' : n + ' SDG';
+  }
+  function wordCount(str){ return (str||'').trim().split(/\s+/).filter(Boolean).length; }
+  function isValidEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+
+  function avgRating(serviceId){
+    const rs = reviews.filter(r=>r.serviceId===serviceId);
+    if(!rs.length) return {avg:0, count:0};
+    const sum = rs.reduce((a,r)=>a+r.rating,0);
+    return {avg: Math.round((sum/rs.length)*10)/10, count: rs.length};
+  }
+  function hasReview(orderId){ return reviews.some(r=>r.orderId===orderId); }
+
+  function providerStats(providerId){
+    const providerOrders = orders.filter(o=>o.providerId===providerId);
+    const total = providerOrders.length;
+    const done = providerOrders.filter(o=>o.status==='done').length;
+    const completionRate = total>0 ? Math.round((done/total)*100) : null;
+
+    let responseTimes = [];
+    providerOrders.forEach(o=>{
+      const providerMsgs = messages.filter(m=>m.orderId===o.id && m.senderId===providerId).sort((a,b)=>a.createdAt-b.createdAt);
+      if(providerMsgs.length){
+        const diff = providerMsgs[0].createdAt - o.createdAt;
+        if(diff>=0) responseTimes.push(diff);
+      }
+    });
+    const avgResponseMs = responseTimes.length ? responseTimes.reduce((a,b)=>a+b,0)/responseTimes.length : null;
+    return {total, done, completionRate, avgResponseMs};
+  }
+
+  function formatDuration(ms){
+    const mins = ms/60000;
+    if(mins<60) return lang==='ar' ? `${Math.max(1,Math.round(mins))} دقيقة` : `${Math.max(1,Math.round(mins))} min`;
+    const hours = mins/60;
+    if(hours<24) return lang==='ar' ? `${Math.round(hours)} ساعة` : `${Math.round(hours)} hr`;
+    const days = hours/24;
+    return lang==='ar' ? `${Math.round(days)} يوم` : `${Math.round(days)} d`;
+  }
+
+  function notifText(n){
+    if(n.type==='new_order'){
+      return lang==='ar' ? `طلب جديد على خدمة "${n.data.serviceName}"` : `New order on "${n.data.serviceName}"`;
+    }
+    if(n.type==='status_changed'){
+      const st = tr(STATUS_LABELS[n.data.status]);
+      return lang==='ar' ? `تغيرت حالة طلبك على "${n.data.serviceName}" إلى: ${st}` : `Your order for "${n.data.serviceName}" is now: ${st}`;
+    }
+    if(n.type==='new_review'){
+      return lang==='ar' ? `تقييم جديد (${n.data.rating}⭐) على خدمة "${n.data.serviceName}"` : `New review (${n.data.rating}⭐) on "${n.data.serviceName}"`;
+    }
+    if(n.type==='new_message'){
+      return lang==='ar' ? `رسالة جديدة من ${n.data.senderName} بخصوص "${n.data.serviceName}"` : `New message from ${n.data.senderName} about "${n.data.serviceName}"`;
+    }
+    if(n.type==='payment_submitted'){
+      return lang==='ar' ? `تم تأكيد تحويل الدفع من طرف العميل على خدمة "${n.data.serviceName}"` : `Client confirmed payment for "${n.data.serviceName}"`;
+    }
+    if(n.type==='payment_confirmed'){
+      return lang==='ar' ? `تم تأكيد استلام دفعتك على خدمة "${n.data.serviceName}"` : `Your payment for "${n.data.serviceName}" was confirmed`;
+    }
+    return '';
+  }
+  function unreadCount(){ return notifications.filter(n=>n.userId===profile.id && !n.read).length; }
+
+  async function hashPassword(email, password){
+    const input = email.toLowerCase().trim() + ':' + password + ':mahara-salt-2026';
+    if(window.crypto && window.crypto.subtle){
+      try{
+        const enc = new TextEncoder().encode(input);
+        const buf = await window.crypto.subtle.digest('SHA-256', enc);
+        return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+      }catch(e){}
+    }
+    let h = 0;
+    for(let i=0;i<input.length;i++){ h = (h*31 + input.charCodeAt(i))>>>0; }
+    return 'fallback-' + h.toString(16);
+  }
+
+  function applyChrome(){
+    document.documentElement.setAttribute('dir', lang==='ar' ? 'rtl' : 'ltr');
+    document.documentElement.setAttribute('lang', lang);
+    document.body.classList.toggle('dark', darkMode);
+  }
+
+  function showToast(msg){
+    toastMsg = msg;
+    render();
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>{ toastMsg=''; render(); }, 2400);
+  }
+
+  // ---------------- backend (n8n) ----------------
+  const API_URL = 'https://ahmedmahir232.app.n8n.cloud/webhook/mahara-api';
+  async function api(payload){
+    const r = await fetch(API_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(payload)});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return await r.json();
+  }
+  function lsGet(key){ try{ const v = localStorage.getItem('mahara:'+key); return v ? JSON.parse(v) : null; }catch(e){ return null; } }
+  function lsSet(key, val){ try{ localStorage.setItem('mahara:'+key, JSON.stringify(val)); }catch(e){} }
+
+  const synced = {};
+  function snapshot(table, arr){
+    const m = {};
+    (arr||[]).forEach(x=>{ m[x.id] = JSON.stringify(x); });
+    synced[table] = m;
+  }
+  async function syncTable(table, arr){
+    const prev = synced[table] || {};
+    const cur = {};
+    const ops = [];
+    arr.forEach(x=>{
+      cur[x.id] = true;
+      if(!(x.id in prev)) ops.push({action:'insert', table, row:x});
+      else if(prev[x.id] !== JSON.stringify(x)) ops.push({action:'update', table, id:x.id, fields:x});
+    });
+    Object.keys(prev).forEach(id=>{ if(!cur[id]) ops.push({action:'delete', table, id}); });
+    snapshot(table, arr);
+    for(const op of ops){
+      const res = await api(op);
+      if(!res || !res.ok) throw new Error('sync failed');
+    }
+  }
+  async function safeSync(table, arr){
+    try{ await syncTable(table, arr); }
+    catch(e){ showToast(tr('networkError')); }
+  }
+  function userSig(u){ return JSON.stringify({name:u.name, whatsapp:u.whatsapp, paymentInfo:u.paymentInfo||''}); }
+  function allPortfolioItems(){
+    const out = [];
+    users.forEach(u=>{ (u.portfolio||[]).forEach(p=>out.push(Object.assign({}, p, {userId:u.id}))); });
+    return out;
+  }
+
+  async function fetchAll(){
+    const d = await api({action:'listAll', userId: profile ? profile.id : ''});
+    if(!d || !d.ok) throw new Error('bad response');
+    users = d.users || [];
+    services = d.services || [];
+    orders = d.orders || [];
+    reviews = d.reviews || [];
+    notifications = d.notifications || [];
+    messages = d.messages || [];
+    reports = d.reports || [];
+    const pf = d.portfolio || [];
+    users.forEach(u=>{
+      u.portfolio = pf.filter(p=>p.userId===u.id).map(p=>({id:p.id, title:p.title, description:p.description, link:p.link, image:p.image}));
+    });
+    snapshot('services', services); snapshot('orders', orders); snapshot('reviews', reviews);
+    snapshot('notifications', notifications); snapshot('messages', messages); snapshot('reports', reports);
+    snapshot('portfolio', allPortfolioItems());
+    synced.users = {};
+    users.forEach(u=>{ synced.users[u.id] = userSig(u); });
+    if(profile){
+      const fresh = users.find(u=>u.id===profile.id);
+      if(fresh){ fresh.email = profile.email; profile = fresh; } else { profile = null; }
+    }
+  }
+
+  let lastFetch = Date.now();
+  async function refreshData(){
+    if(!profile) return;
+    try{
+      await fetchAll();
+      lastFetch = Date.now();
+      const a = document.activeElement;
+      if(a && (a.tagName==='INPUT' || a.tagName==='TEXTAREA' || a.tagName==='SELECT')) return;
+      render();
+    }catch(e){}
+  }
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState==='visible' && Date.now()-lastFetch > 30000) refreshData();
+  });
+  setInterval(()=>{
+    if(document.visibilityState==='visible' && view==='chat') refreshData();
+  }, 15000);
+
+  async function loadAll(){
+    const s = lsGet('settings');
+    if(s){ lang = s.lang || 'ar'; darkMode = !!s.dark; }
+    applyChrome();
+    render();
+    const sess = lsGet('session') || {};
+    profile = sess.userId ? {id:sess.userId, email:sess.email||''} : null;
+    try{
+      await fetchAll();
+      lastFetch = Date.now();
+    }catch(e){
+      profile = null;
+      view = 'auth';
+      render();
+      showToast(tr('networkError'));
+      return;
+    }
+    view = profile ? 'home' : 'auth';
+    render();
+  }
+
+  async function saveSettings(){ lsSet('settings', {lang, dark:darkMode}); }
+  async function saveUsers(){
+    try{
+      for(const u of users){
+        const sig = userSig(u);
+        if(synced.users && synced.users[u.id] !== undefined && synced.users[u.id] !== sig){
+          const res = await api({action:'update', table:'users', id:u.id, fields:{name:u.name, whatsapp:u.whatsapp, paymentInfo:u.paymentInfo||''}});
+          if(!res || !res.ok) throw new Error('sync failed');
+        }
+        synced.users[u.id] = sig;
+      }
+      await syncTable('portfolio', allPortfolioItems());
+    }catch(e){ showToast(tr('networkError')); }
+  }
+  async function saveServices(){ await safeSync('services', services); }
+  async function saveOrders(){ await safeSync('orders', orders); }
+  async function saveReviews(){ await safeSync('reviews', reviews); }
+  async function saveNotifications(){ await safeSync('notifications', notifications); }
+  async function saveMessages(){ await safeSync('messages', messages); }
+  async function saveReports(){ await safeSync('reports', reports); }
+  async function saveSession(userId, email){ lsSet('session', {userId, email: email||''}); }
+  async function clearSession(){ lsSet('session', {userId:null, email:''}); }
+
+  function logout(){
+    profile = null;
+    clearSession();
+    authMode='login'; authName=''; authEmail=''; authPassword=''; authConfirmPassword=''; authWhatsapp=''; authRole='client';
+    view = 'auth';
+    render();
+  }
+
+  function toggleLang(){ lang = lang==='ar' ? 'en' : 'ar'; saveSettings(); applyChrome(); render(); }
+  function toggleDark(){ darkMode = !darkMode; saveSettings(); applyChrome(); render(); }
+
+  // ---------------- render pieces ----------------
+  function renderHeader(activeTab){
+    if(!profile) return '';
+    return `
+      <div class="header">
+        <div class="header-top">
+          <div class="brand">
+            <div class="brand-name">
+              <svg class="brand-mark" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="bgGradH" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#146A5B"/>
+                    <stop offset="100%" stop-color="#0B4038"/>
+                  </linearGradient>
+                  <linearGradient id="ringGradH" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#E0B25A"/>
+                    <stop offset="100%" stop-color="#C68A2E"/>
+                  </linearGradient>
+                </defs>
+                <rect x="0" y="0" width="200" height="200" rx="46" fill="url(#bgGradH)"/>
+                <circle cx="80" cy="100" r="40" fill="none" stroke="url(#ringGradH)" stroke-width="13"/>
+                <circle cx="120" cy="100" r="40" fill="none" stroke="url(#ringGradH)" stroke-width="13"/>
+                <circle cx="100" cy="100" r="9" fill="#F5EBD8"/>
+              </svg>
+              مهارة
+            </div>
+            <div class="tagline">${tr('tagline')}</div>
+          </div>
+          <div class="header-actions">
+            <div class="icon-btn" data-action="toggle-lang" title="EN/AR">${lang==='ar'?'EN':'AR'}</div>
+            <div class="icon-btn" data-action="toggle-dark" title="dark mode">${darkMode?'☀️':'🌙'}</div>
+            <div class="icon-btn" data-action="go-notifications" style="position:relative;">🔔${unreadCount()>0?`<span style="position:absolute;top:-4px;${lang==='ar'?'left':'right'}:-4px;background:var(--danger);color:#fff;border-radius:10px;font-size:9px;font-weight:700;padding:1px 4px;min-width:14px;">${unreadCount()}</span>`:''}</div>
+            ${profile.email===ADMIN_EMAIL ? `<div class="icon-btn" data-action="go-reports-admin" title="reports">🚩</div>` : ''}
+            ${profile.email===ADMIN_EMAIL ? `<div class="icon-btn" data-action="go-admin-stats" title="stats">📊</div>` : ''}
+            <div class="profile-chip" data-action="logout" title="${tr('logoutHint')}">👋 <b>${escapeHtml(profile.name)}</b></div>
+          </div>
+        </div>
+        <div class="tabs">
+          <div class="tab ${activeTab==='home'?'active':''}" data-action="go-home">${tr('tabHome')}</div>
+          ${profile.role==='freelancer' ? `<div class="tab ${activeTab==='myservices'?'active':''}" data-action="go-myservices">${tr('tabMyServices')}</div>` : ''}
+          ${profile.role==='freelancer' ? `<div class="tab ${activeTab==='portfolio'?'active':''}" data-action="go-portfolio">${tr('tabPortfolio')}</div>` : ''}
+          <div class="tab ${activeTab==='myorders'?'active':''}" data-action="go-myorders">${tr('tabMyOrders')}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderAuth(){
+    if(authMode==='reset'){
+      return `
+        <div class="auth-wrap">
+          <div class="onboard-logo">مهارة</div>
+          <div class="auth-form">
+            <div class="detail-title" style="font-size:17px;text-align:center;">${tr('resetPasswordTitle')}</div>
+            ${resetStage==='email' ? `
+              <div class="field"><label>${tr('emailLabel')}</label><input type="email" id="rs-email" value="${escapeHtml(rsEmail)}" dir="ltr"></div>
+              <button type="button" class="btn btn-primary" data-action="reset-continue">${tr('continueBtn')}</button>
+            ` : `
+              <div class="field"><label>${tr('newPasswordLabel')}</label><input type="password" id="rs-newpass" value="${escapeHtml(rsNewPassword)}" dir="ltr"></div>
+              <div class="field"><label>${tr('confirmPasswordLabel')}</label><input type="password" id="rs-confirmpass" value="${escapeHtml(rsConfirmPassword)}" dir="ltr"></div>
+              <button type="button" class="btn btn-primary" data-action="reset-submit">${tr('resetPasswordBtn')}</button>
+            `}
+            <div class="auth-switch">
+              <button type="button" class="link-btn" data-action="toggle-auth-mode">${tr('switchToLogin')}</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    const isSignup = authMode==='signup';
+    return `
+      <div class="auth-wrap">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:64px;height:64px;display:block;margin:0 auto 12px;">
+          <defs>
+            <linearGradient id="bgGradO" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#146A5B"/>
+              <stop offset="100%" stop-color="#0B4038"/>
+            </linearGradient>
+            <linearGradient id="ringGradO" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#E0B25A"/>
+              <stop offset="100%" stop-color="#C68A2E"/>
+            </linearGradient>
+          </defs>
+          <rect x="0" y="0" width="200" height="200" rx="46" fill="url(#bgGradO)"/>
+          <circle cx="80" cy="100" r="40" fill="none" stroke="url(#ringGradO)" stroke-width="13"/>
+          <circle cx="120" cy="100" r="40" fill="none" stroke="url(#ringGradO)" stroke-width="13"/>
+          <circle cx="100" cy="100" r="9" fill="#F5EBD8"/>
+        </svg>
+        <div class="onboard-logo">مهارة</div>
+        <div class="onboard-tag">${tr('onboardTag')}</div>
+        <div class="auth-form">
+          <div class="detail-title" style="font-size:17px;text-align:center;">${isSignup?tr('signupTitle'):tr('loginTitle')}</div>
+          ${isSignup ? `
+            <div class="field"><label>${tr('nameLabel')}</label><input type="text" id="auth-name" value="${escapeHtml(authName)}"></div>
+          ` : ''}
+          <div class="field"><label>${tr('emailLabel')}</label><input type="email" id="auth-email" value="${escapeHtml(authEmail)}" dir="ltr"></div>
+          <div class="field"><label>${tr('passwordLabel')}</label><input type="password" id="auth-password" value="${escapeHtml(authPassword)}" dir="ltr"></div>
+          ${isSignup ? `
+            <div class="field"><label>${tr('confirmPasswordLabel')}</label><input type="password" id="auth-confirm" value="${escapeHtml(authConfirmPassword)}" dir="ltr"></div>
+            <div class="field"><label>${tr('whatsappLabel')}</label><input type="tel" id="auth-whatsapp" value="${escapeHtml(authWhatsapp)}" dir="ltr"></div>
+            <div class="field">
+              <label>${tr('roleQuestion')}</label>
+              <div class="radio-group">
+                <div class="radio-option ${authRole==='client'?'selected':''}" data-action="pick-role" data-role="client">${tr('roleClient')}<br>${tr('roleClientSub')}</div>
+                <div class="radio-option ${authRole==='freelancer'?'selected':''}" data-action="pick-role" data-role="freelancer">${tr('roleFreelancer')}<br>${tr('roleFreelancerSub')}</div>
+              </div>
+            </div>
+          ` : ''}
+          <button type="button" class="btn btn-primary" data-action="${isSignup?'signup-submit':'login-submit'}">${isSignup?tr('signupBtn'):tr('loginBtn')}</button>
+          ${!isSignup ? `<div class="auth-switch"><button type="button" class="link-btn" data-action="go-reset-password">${tr('forgotPassword')}</button></div>` : ''}
+          <div class="auth-switch">
+            <button type="button" class="link-btn" data-action="toggle-auth-mode">${isSignup?tr('switchToLogin'):tr('switchToSignup')}</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderHome(){
+    const q = searchQuery.trim().toLowerCase();
+    let list = services.filter(s=>{
+      const matchesCat = filterCategory==='all' || s.category===filterCategory;
+      const matchesQ = !q || s.name.toLowerCase().includes(q) || s.description.toLowerCase().includes(q);
+      return matchesCat && matchesQ;
+    });
+
+    const chips = `<div class="chips">
+      <div class="chip ${filterCategory==='all'?'active':''}" data-action="filter-cat" data-cat="all">${tr('all')}</div>
+      ${CATEGORIES.map(c=>`<div class="chip ${filterCategory===c.id?'active':''}" data-action="filter-cat" data-cat="${c.id}">${c.icon} ${c.label[lang]}</div>`).join('')}
+    </div>`;
+
+    const listHtml = list.length ? list.map(s=>{
+      const rating = avgRating(s.id);
+      return `
+      <div class="service-row" data-action="open-service" data-id="${s.id}">
+        ${s.image ? `<img class="service-thumb" src="${escapeHtml(s.image)}" loading="lazy" onerror="this.style.display='none'">` : `<div class="service-thumb-placeholder">${catInfo(s.category).icon}</div>`}
+        <div class="service-main">
+          <div class="service-top">
+            <div class="service-name">${escapeHtml(s.name)}</div>
+            <div class="service-price">${formatPrice(s.price)}</div>
+          </div>
+          <div class="service-desc">${escapeHtml(s.description)}</div>
+          <div class="service-meta">
+            <span class="tag">${catInfo(s.category).icon} ${catInfo(s.category).label[lang]}</span>
+            <span>${escapeHtml(s.ownerName)}</span>
+            ${rating.count>0 ? `<span>⭐ ${rating.avg} (${rating.count})</span>` : ''}
+          </div>
+        </div>
+      </div>
+    `;}).join('') : `
+      <div class="empty">
+        <div class="empty-icon">🔍</div>
+        <div class="empty-title">${tr('noResultsTitle')}</div>
+        <div class="empty-sub">${tr('noResultsSub')}</div>
+      </div>
+    `;
+
+    return `
+      ${renderHeader('home')}
+      <div class="content">
+        <input type="text" class="search-input" id="search-input" placeholder="${tr('searchPlaceholder')}" value="${escapeHtml(searchQuery)}">
+        ${chips}
+        <div>${listHtml}</div>
+      </div>
+    `;
+  }
+
+  function renderServiceDetail(){
+    const s = services.find(x=>x.id===selectedServiceId);
+    if(!s){ view='home'; return renderHome(); }
+    const isOwner = profile.id === s.ownerId;
+    const rating = avgRating(s.id);
+    const serviceReviews = reviews.filter(r=>r.serviceId===s.id).sort((a,b)=>b.createdAt-a.createdAt);
+    return `
+      ${renderHeader('home')}
+      <div class="content">
+        <div class="back-link" data-action="go-home">${tr('backBtn')}</div>
+        ${s.image ? `<img class="detail-image" src="${escapeHtml(s.image)}" onerror="this.style.display='none'">` : ''}
+        <div class="detail-title">${escapeHtml(s.name)}</div>
+        <div class="detail-provider">${catInfo(s.category).icon} ${catInfo(s.category).label[lang]} · <span data-action="open-profile" data-id="${s.ownerId}" style="text-decoration:underline;cursor:pointer;color:var(--primary);">${escapeHtml(s.ownerName)}</span> ${rating.count>0?`· ⭐ ${rating.avg} (${rating.count})`:''}</div>
+        <div class="detail-price-box"><span>${tr('priceWord')}</span><span class="detail-price">${formatPrice(s.price)}</span></div>
+        <div class="detail-desc">${escapeHtml(s.description)}</div>
+        ${isOwner ? `
+          <div class="empty" style="padding:20px 0;"><div class="empty-sub">${tr('ownServiceNote')}</div></div>
+        ` : `<button class="btn btn-primary" data-action="place-order" data-id="${s.id}">${tr('orderBtn')}</button>`}
+        <button type="button" class="btn btn-ghost" data-action="open-report" data-type="service" data-id="${s.id}" data-name="${escapeHtml(s.name)}" style="margin-top:10px;">${tr('reportBtn')}</button>
+        <div class="order-section-title">${tr('reviewsTitle')}</div>
+        ${serviceReviews.length ? serviceReviews.map(r=>`
+          <div class="order-row">
+            <div style="font-size:13px;font-weight:700;">${'⭐'.repeat(r.rating)}</div>
+            ${r.comment ? `<div style="font-size:13px;margin-top:4px;">${escapeHtml(r.comment)}</div>` : ''}
+          </div>
+        `).join('') : `<div class="empty-sub" style="text-align:center;padding:10px 0;">${tr('noReviewsYet')}</div>`}
+      </div>
+    `;
+  }
+
+  function renderMyServices(){
+    const mine = services.filter(s=>s.ownerId===profile.id);
+    const listHtml = mine.length ? mine.map(s=>`
+      <div class="my-service-row">
+        ${s.image ? `<img class="service-thumb" src="${escapeHtml(s.image)}" loading="lazy" onerror="this.style.display='none'">` : `<div class="service-thumb-placeholder">${catInfo(s.category).icon}</div>`}
+        <div class="my-service-body">
+          <div class="service-top">
+            <div class="service-name">${escapeHtml(s.name)}</div>
+            <div class="service-price">${formatPrice(s.price)}</div>
+          </div>
+          <div class="service-meta"><span class="tag">${catInfo(s.category).icon} ${catInfo(s.category).label[lang]}</span></div>
+          <div class="my-service-actions">
+            <button class="btn btn-secondary" data-action="edit-service" data-id="${s.id}" style="width:auto;flex:1;">${tr('editBtn')}</button>
+            <button class="btn btn-danger" data-action="delete-service" data-id="${s.id}" style="width:auto;flex:1;">${tr('deleteBtn')}</button>
+          </div>
+        </div>
+      </div>
+    `).join('') : `
+      <div class="empty">
+        <div class="empty-icon">🧰</div>
+        <div class="empty-title">${tr('noServicesTitle')}</div>
+        <div class="empty-sub">${tr('noServicesSub')}</div>
+      </div>
+    `;
+    return `
+      ${renderHeader('myservices')}
+      <div class="content">
+        <div class="field" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;">
+          <label>${tr('paymentInfoLabel')}</label>
+          <input type="text" id="pm-info" value="${escapeHtml(pmInfoDraft)}" placeholder="${tr('paymentInfoPlaceholder')}" dir="auto">
+          <button type="button" class="btn btn-secondary" data-action="save-payment-info" style="margin-top:8px;">${tr('savePaymentInfo')}</button>
+        </div>
+        <button class="btn btn-primary" data-action="add-service-form" style="margin-bottom:16px;">${tr('addServiceBtn')}</button>
+        ${listHtml}
+      </div>
+    `;
+  }
+
+  function renderServiceForm(){
+    const editing = !!editingServiceId;
+    const wc = wordCount(sfDesc);
+    const wcClass = wc>=100 ? 'ok' : 'low';
+    return `
+      ${renderHeader('myservices')}
+      <div class="content">
+        <div class="back-link" data-action="go-myservices">${tr('backBtn')}</div>
+        <div class="detail-title" style="font-size:17px;">${editing ? tr('saveChangesBtn') : tr('publishBtn')}</div>
+        <div id="service-form">
+          <div class="field">
+            <label>${tr('serviceNameLabel')}</label>
+            <input type="text" id="sf-name" value="${escapeHtml(sfName)}">
+          </div>
+          <div class="field">
+            <label>${tr('categoryLabel')}</label>
+            <select id="sf-category">
+              ${CATEGORIES.map(c=>`<option value="${c.id}" ${sfCategory===c.id?'selected':''}>${c.icon} ${c.label[lang]}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label>${tr('priceLabel')}</label>
+            <input type="text" inputmode="numeric" pattern="[0-9]*" id="sf-price" value="${escapeHtml(String(sfPrice))}" dir="ltr">
+          </div>
+          <div class="field">
+            <label>${tr('imageLabel')}</label>
+            <input type="url" id="sf-image" value="${escapeHtml(sfImage)}" placeholder="https://..." dir="ltr">
+          </div>
+          <div class="field">
+            <label>${tr('descLabel')}</label>
+            <textarea id="sf-desc">${escapeHtml(sfDesc)}</textarea>
+            <div class="word-count ${wcClass}" id="sf-wordcount">${wc} / 100 ${tr('wordsUnit')}</div>
+          </div>
+          <button type="button" class="btn btn-primary" data-action="save-service">${editing?tr('saveChangesBtn'):tr('publishBtn')}</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderMyOrders(){
+    const placedByMe = orders.filter(o=>o.clientId===profile.id);
+    const receivedByMe = orders.filter(o=>o.providerId===profile.id);
+
+    function orderRow(o, isProvider){
+      const provider = users.find(u=>u.id===o.providerId);
+      const paymentInfo = provider ? provider.paymentInfo : '';
+      let paymentHtml = '';
+      if(o.paymentStatus==='confirmed'){
+        paymentHtml = `<div class="status-badge status-done" style="display:inline-block;margin-top:6px;">✅ ${tr('paymentConfirmedLabel')}</div>`;
+      } else if(o.paymentStatus==='awaiting_confirmation'){
+        if(isProvider){
+          paymentHtml = `
+            <div class="order-sub" style="margin-top:6px;">${tr('referenceWord')}: ${escapeHtml(o.paymentReference)}</div>
+            <button type="button" class="btn btn-secondary" data-action="confirm-payment" data-id="${o.id}">${tr('confirmReceiptBtn')}</button>
+          `;
+        } else {
+          paymentHtml = `<div class="order-sub" style="margin-top:6px;">⏳ ${tr('paymentAwaitingConfirm')}</div>`;
+        }
+      } else {
+        if(isProvider){
+          paymentHtml = `<div class="order-sub" style="margin-top:6px;">${tr('notPaidYet')}</div>`;
+        } else {
+          paymentHtml = `
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:8px;">
+              <div style="font-size:12px;font-weight:700;margin-bottom:4px;">${tr('paymentInstructionsTitle')}</div>
+              <div style="font-size:12.5px;color:var(--muted);margin-bottom:8px;" dir="auto">${paymentInfo ? escapeHtml(paymentInfo) : tr('noPaymentInfoSet')}</div>
+              ${paymentInfo ? `
+                <input type="text" class="payment-ref-input" data-order-id="${o.id}" placeholder="${tr('transactionRefLabel')}" value="${escapeHtml(paymentRefDrafts[o.id]||'')}" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;margin-bottom:8px;background:var(--surface);color:var(--text);">
+                <button type="button" class="btn btn-secondary" data-action="submit-payment" data-id="${o.id}">${tr('iHavePaid')}</button>
+              ` : ''}
+            </div>
+          `;
+        }
+      }
+      return `
+        <div class="order-row">
+          <div class="order-top">
+            <span class="order-service">${escapeHtml(o.serviceName)}</span>
+            <span class="status-badge status-${o.status}">${tr(STATUS_LABELS[o.status])}</span>
+          </div>
+          <div class="order-sub">${isProvider ? tr('clientWord')+': '+escapeHtml(o.clientName) : tr('providerWord')+': '+escapeHtml(o.providerName)} · ${formatPrice(o.price)}</div>
+          ${paymentHtml}
+          <button type="button" class="btn btn-ghost" data-action="open-chat" data-id="${o.id}" style="margin:8px 0;">💬 ${tr('openChat')}</button>
+          <button type="button" class="btn btn-ghost" data-action="open-report" data-type="order" data-id="${o.id}" data-name="${escapeHtml(o.serviceName)}" style="margin-bottom:4px;">${tr('reportBtn')}</button>
+          ${isProvider ? `
+            <select data-action="update-status" data-id="${o.id}" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;background:var(--surface);color:var(--text);">
+              <option value="pending" ${o.status==='pending'?'selected':''}>${tr('statusPending')}</option>
+              <option value="in_progress" ${o.status==='in_progress'?'selected':''}>${tr('statusInProgress')}</option>
+              <option value="done" ${o.status==='done'?'selected':''}>${tr('statusDone')}</option>
+            </select>
+          ` : (o.status==='done' && !hasReview(o.id) ? `
+            <button type="button" class="btn btn-secondary" data-action="open-review" data-id="${o.id}" style="margin-top:6px;">${tr('rateService')}</button>
+          ` : '')}
+        </div>
+      `;
+    }
+
+    const placedHtml = placedByMe.length ? placedByMe.map(o=>orderRow(o,false)).join('') : `
+      <div class="empty">
+        <div class="empty-icon">📭</div>
+        <div class="empty-title">${tr('noOrdersTitle')}</div>
+        <div class="empty-sub">${tr('noOrdersSub')}</div>
+      </div>`;
+
+    const receivedHtml = receivedByMe.length ? `
+      <div class="order-section-title">${tr('ordersAsProviderTitle')}</div>
+      ${receivedByMe.map(o=>orderRow(o,true)).join('')}
+    ` : '';
+
+    return `
+      ${renderHeader('myorders')}
+      <div class="content">
+        <div class="order-section-title">${tr('ordersAsClientTitle')}</div>
+        ${placedHtml}
+        ${receivedHtml}
+      </div>
+    `;
+  }
+
+  function renderNotifications(){
+    const mine = notifications.filter(n=>n.userId===profile.id).sort((a,b)=>b.createdAt-a.createdAt);
+    const listHtml = mine.length ? mine.map(n=>`
+      <div class="order-row" data-action="open-notification" data-id="${n.id}" style="cursor:pointer;${n.read?'opacity:0.6;':'border-color:var(--primary);'}">
+        <div class="order-sub" style="margin-bottom:2px;">${new Date(n.createdAt).toLocaleString(lang==='ar'?'ar-EG':'en-US')}</div>
+        <div style="font-size:13.5px;">${escapeHtml(notifText(n))}</div>
+      </div>
+    `).join('') : `
+      <div class="empty">
+        <div class="empty-icon">🔔</div>
+        <div class="empty-title">${tr('noNotifications')}</div>
+      </div>
+    `;
+    return `
+      ${renderHeader('')}
+      <div class="content">
+        <div class="back-link" data-action="go-home">${tr('backBtn')}</div>
+        <div class="detail-title" style="font-size:17px;display:flex;justify-content:space-between;align-items:center;">
+          <span>${tr('notificationsTitle')}</span>
+          ${mine.length ? `<button class="link-btn" data-action="mark-all-read">${tr('markAllRead')}</button>` : ''}
+        </div>
+        ${listHtml}
+      </div>
+    `;
+  }
+
+  function renderReviewForm(){
+    const o = orders.find(x=>x.id===reviewOrderId);
+    if(!o){ view='myorders'; return renderMyOrders(); }
+    const stars = [1,2,3,4,5].map(n=>`
+      <span data-action="pick-rating" data-val="${n}" style="font-size:28px;cursor:pointer;${n<=rvRating?'':'opacity:0.3;'}">⭐</span>
+    `).join('');
+    return `
+      ${renderHeader('myorders')}
+      <div class="content">
+        <div class="back-link" data-action="go-myorders">${tr('backBtn')}</div>
+        <div class="detail-title" style="font-size:17px;">${tr('rateService')}: ${escapeHtml(o.serviceName)}</div>
+        <div class="field">
+          <label>${tr('yourRating')}</label>
+          <div>${stars}</div>
+        </div>
+        <div class="field">
+          <label>${tr('commentOptional')}</label>
+          <textarea id="rv-comment" style="min-height:70px;">${escapeHtml(rvComment)}</textarea>
+        </div>
+        <button type="button" class="btn btn-primary" data-action="submit-review">${tr('submitReview')}</button>
+      </div>
+    `;
+  }
+
+  function renderPortfolio(){
+    const items = profile.portfolio || [];
+    const listHtml = items.length ? items.map(p=>`
+      <div class="my-service-row">
+        ${p.image ? `<img class="service-thumb" src="${escapeHtml(p.image)}" loading="lazy" onerror="this.style.display='none'">` : `<div class="service-thumb-placeholder">🗂️</div>`}
+        <div class="my-service-body">
+          <div class="service-name">${escapeHtml(p.title)}</div>
+          <div class="service-desc" style="-webkit-line-clamp:3;">${escapeHtml(p.description)}</div>
+          ${p.link ? `<div style="font-size:12px;margin-top:4px;"><a href="${escapeHtml(p.link)}" target="_blank" rel="noopener" style="color:var(--primary);">${tr('viewLink')}</a></div>` : ''}
+          <div class="my-service-actions">
+            <button class="btn btn-secondary" data-action="edit-portfolio" data-id="${p.id}" style="width:auto;flex:1;">${tr('editBtn')}</button>
+            <button class="btn btn-danger" data-action="delete-portfolio" data-id="${p.id}" style="width:auto;flex:1;">${tr('deleteBtn')}</button>
+          </div>
+        </div>
+      </div>
+    `).join('') : `
+      <div class="empty">
+        <div class="empty-icon">🗂️</div>
+        <div class="empty-title">${tr('noPortfolioTitle')}</div>
+        <div class="empty-sub">${tr('noPortfolioSub')}</div>
+      </div>
+    `;
+    return `
+      ${renderHeader('portfolio')}
+      <div class="content">
+        <button class="btn btn-primary" data-action="add-portfolio-form" style="margin-bottom:16px;">${tr('addPortfolioItem')}</button>
+        ${listHtml}
+      </div>
+    `;
+  }
+
+  function renderPortfolioForm(){
+    const editing = !!editingPortfolioId;
+    return `
+      ${renderHeader('portfolio')}
+      <div class="content">
+        <div class="back-link" data-action="go-portfolio">${tr('backBtn')}</div>
+        <div class="detail-title" style="font-size:17px;">${tr('addPortfolioItem')}</div>
+        <div id="portfolio-form">
+          <div class="field"><label>${tr('portfolioItemTitleLabel')}</label><input type="text" id="pf-title" value="${escapeHtml(pfTitle)}"></div>
+          <div class="field"><label>${tr('portfolioItemDescLabel')}</label><textarea id="pf-desc" style="min-height:80px;">${escapeHtml(pfDesc)}</textarea></div>
+          <div class="field"><label>${tr('portfolioItemLinkLabel')}</label><input type="url" id="pf-link" value="${escapeHtml(pfLink)}" dir="ltr" placeholder="https://..."></div>
+          <div class="field"><label>${tr('portfolioItemImageLabel')}</label><input type="url" id="pf-image" value="${escapeHtml(pfImage)}" dir="ltr" placeholder="https://..."></div>
+          <button type="button" class="btn btn-primary" data-action="save-portfolio">${editing?tr('saveChangesBtn'):tr('savePortfolioItem')}</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderProviderProfile(){
+    const provider = users.find(u=>u.id===viewingProviderId);
+    if(!provider){ view='home'; return renderHome(); }
+    const providerServices = services.filter(s=>s.ownerId===provider.id);
+    const allProviderReviews = reviews.filter(r=>providerServices.some(s=>s.id===r.serviceId));
+    const avg = allProviderReviews.length ? Math.round((allProviderReviews.reduce((a,r)=>a+r.rating,0)/allProviderReviews.length)*10)/10 : 0;
+    const items = provider.portfolio || [];
+    const stats = providerStats(provider.id);
+    return `
+      ${renderHeader('')}
+      <div class="content">
+        <div class="back-link" data-action="go-home">${tr('backBtn')}</div>
+        <div class="detail-title">${escapeHtml(provider.name)}</div>
+        <div class="detail-provider">${allProviderReviews.length>0 ? `⭐ ${avg} (${allProviderReviews.length})` : tr('noReviewsYet')}</div>
+
+        <div class="detail-price-box" style="flex-direction:column;align-items:stretch;gap:8px;">
+          <div style="display:flex;justify-content:space-between;">
+            <span>${tr('completionRateLabel')}</span>
+            <span style="font-weight:700;">${stats.total>0 ? `${stats.completionRate}% (${stats.done}/${stats.total} ${tr('ordersWord')})` : tr('notEnoughData')}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;">
+            <span>${tr('avgResponseLabel')}</span>
+            <span style="font-weight:700;">${stats.avgResponseMs!==null ? formatDuration(stats.avgResponseMs) : tr('notEnoughData')}</span>
+          </div>
+        </div>
+
+        <div class="order-section-title">${tr('portfolioTitle')}</div>
+        ${items.length ? items.map(p=>`
+          <div class="my-service-row">
+            ${p.image ? `<img class="service-thumb" src="${escapeHtml(p.image)}" loading="lazy" onerror="this.style.display='none'">` : `<div class="service-thumb-placeholder">🗂️</div>`}
+            <div class="my-service-body">
+              <div class="service-name">${escapeHtml(p.title)}</div>
+              <div class="service-desc" style="-webkit-line-clamp:3;">${escapeHtml(p.description)}</div>
+              ${p.link ? `<div style="font-size:12px;margin-top:4px;"><a href="${escapeHtml(p.link)}" target="_blank" rel="noopener" style="color:var(--primary);">${tr('viewLink')}</a></div>` : ''}
+            </div>
+          </div>
+        `).join('') : `<div class="empty-sub" style="text-align:center;padding:10px 0;">${tr('noPortfolioTitle')}</div>`}
+
+        <div class="order-section-title">${tr('servicesOffered')}</div>
+        ${providerServices.map(s=>`
+          <div class="service-row" data-action="open-service" data-id="${s.id}">
+            ${s.image ? `<img class="service-thumb" src="${escapeHtml(s.image)}" loading="lazy" onerror="this.style.display='none'">` : `<div class="service-thumb-placeholder">${catInfo(s.category).icon}</div>`}
+            <div class="service-main">
+              <div class="service-top"><div class="service-name">${escapeHtml(s.name)}</div><div class="service-price">${formatPrice(s.price)}</div></div>
+              <div class="service-meta"><span class="tag">${catInfo(s.category).icon} ${catInfo(s.category).label[lang]}</span></div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function renderChat(){
+    const o = orders.find(x=>x.id===chatOrderId);
+    if(!o){ view='myorders'; return renderMyOrders(); }
+    const otherName = profile.id===o.clientId ? o.providerName : o.clientName;
+    const thread = messages.filter(m=>m.orderId===o.id).sort((a,b)=>a.createdAt-b.createdAt);
+    const bubbles = thread.length ? thread.map(m=>{
+      const mine = m.senderId===profile.id;
+      return `
+        <div style="display:flex;justify-content:${mine?'flex-end':'flex-start'};margin-bottom:8px;">
+          <div style="max-width:75%;padding:9px 13px;border-radius:12px;font-size:13.5px;line-height:1.5;
+            background:${mine?'var(--primary)':'var(--surface)'};color:${mine?'#fff':'var(--text)'};
+            border:${mine?'none':'1px solid var(--border)'};">
+            ${escapeHtml(m.text)}
+          </div>
+        </div>
+      `;
+    }).join('') : `<div class="empty-sub" style="text-align:center;padding:20px 0;">${tr('noMessagesYet')}</div>`;
+
+    return `
+      ${renderHeader('myorders')}
+      <div class="content">
+        <div class="back-link" data-action="go-myorders">${tr('backBtn')}</div>
+        <div class="detail-title" style="font-size:16px;">${tr('conversationTitle')} · ${escapeHtml(otherName)}</div>
+        <div style="margin-bottom:16px;">${bubbles}</div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="chat-input" class="search-input" placeholder="${tr('typeMessagePlaceholder')}" value="${escapeHtml(chatText)}" style="flex:1;">
+          <button type="button" class="btn btn-primary" data-action="send-message" style="width:auto;padding:11px 16px;">${tr('sendBtn')}</button>
+        </div>
+      </div>
+    `;
+  }
+
+
+
+  function renderReportForm(){
+    return `
+      ${renderHeader('')}
+      <div class="content">
+        <div class="back-link" data-action="go-home">${tr('backBtn')}</div>
+        <div class="detail-title" style="font-size:17px;">${tr('reportTitle')}</div>
+        <div class="detail-provider">${escapeHtml(reportTargetName||'')}</div>
+        <div class="field">
+          <label>${tr('reportReasonLabel')}</label>
+          <select id="rp-reason">
+            ${REPORT_REASONS.map(r=>`<option value="${r.id}" ${rpReason===r.id?'selected':''}>${tr(r.label)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field">
+          <label>${tr('reportDetailsLabel')}</label>
+          <textarea id="rp-details" style="min-height:90px;">${escapeHtml(rpDetails)}</textarea>
+        </div>
+        <button type="button" class="btn btn-primary" data-action="submit-report">${tr('submitReport')}</button>
+      </div>
+    `;
+  }
+
+  function renderReportsAdmin(){
+    const sorted = [...reports].sort((a,b)=>b.createdAt-a.createdAt);
+    const listHtml = sorted.length ? sorted.map(r=>`
+      <div class="order-row" style="${r.status==='reviewed'?'opacity:0.6;':'border-color:var(--danger);'}">
+        <div class="order-sub">${new Date(r.createdAt).toLocaleString(lang==='ar'?'ar-EG':'en-US')}</div>
+        <div style="font-size:13px;"><b>${tr('reportedByWord')}:</b> ${escapeHtml(r.reporterName)}</div>
+        <div style="font-size:13px;"><b>${tr('reportedItemWord')}:</b> ${escapeHtml(r.targetName)} (${r.targetType})</div>
+        <div style="font-size:13px;"><b>${tr('reportReasonLabel')}:</b> ${tr(REPORT_REASONS.find(x=>x.id===r.reason)?.label || 'reasonOther')}</div>
+        ${r.details ? `<div style="font-size:13px;margin-top:4px;">${escapeHtml(r.details)}</div>` : ''}
+        ${r.status==='reviewed' ? `<div class="status-badge status-done" style="display:inline-block;margin-top:6px;">${tr('reviewedLabel')}</div>` : `
+          <button type="button" class="btn btn-secondary" data-action="mark-reviewed" data-id="${r.id}" style="margin-top:8px;">${tr('markReviewed')}</button>
+        `}
+      </div>
+    `).join('') : `<div class="empty"><div class="empty-icon">🚩</div><div class="empty-title">${tr('noReports')}</div></div>`;
+    return `
+      ${renderHeader('')}
+      <div class="content">
+        <div class="back-link" data-action="go-home">${tr('backBtn')}</div>
+        <div class="detail-title" style="font-size:17px;">${tr('reportsAdminTitle')}</div>
+        ${listHtml}
+      </div>
+    `;
+  }
+
+
+  function renderAdminStats(){
+    const freelancersCount = users.filter(u=>u.role==='freelancer').length;
+    const clientsCount = users.filter(u=>u.role==='client').length;
+    const ordersByStatus = {
+      pending: orders.filter(o=>o.status==='pending').length,
+      in_progress: orders.filter(o=>o.status==='in_progress').length,
+      done: orders.filter(o=>o.status==='done').length,
+    };
+    const openReportsCount = reports.filter(r=>r.status==='open').length;
+    const allTimestamps = [
+      ...orders.map(o=>o.createdAt),
+      ...messages.map(m=>m.createdAt),
+      ...reviews.map(r=>r.createdAt),
+    ];
+    const lastActivity = allTimestamps.length ? Math.max(...allTimestamps) : null;
+
+    function stat(label, value){
+      return `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:13.5px;color:var(--muted);">${label}</span>
+          <span style="font-size:16px;font-weight:800;color:var(--primary);">${value}</span>
+        </div>
+      `;
+    }
+
+    return `
+      ${renderHeader('')}
+      <div class="content">
+        <div class="back-link" data-action="go-home">${tr('backBtn')}</div>
+        <div class="detail-title" style="font-size:17px;">${tr('adminStatsTitle')}</div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0 14px;">
+          ${stat(tr('totalUsers'), users.length)}
+          ${stat(tr('totalFreelancers'), freelancersCount)}
+          ${stat(tr('totalClients'), clientsCount)}
+          ${stat(tr('totalServices'), services.length)}
+          ${stat(tr('totalOrders'), orders.length)}
+          ${stat('— ' + tr('statusPending'), ordersByStatus.pending)}
+          ${stat('— ' + tr('statusInProgress'), ordersByStatus.in_progress)}
+          ${stat('— ' + tr('statusDone'), ordersByStatus.done)}
+          ${stat(tr('totalReviews'), reviews.length)}
+          ${stat(tr('totalMessages'), messages.length)}
+          ${stat(tr('openReportsStat'), openReportsCount)}
+        </div>
+        <div class="order-section-title">${tr('lastActivityLabel')}</div>
+        <div class="empty-sub" style="text-align:center;">
+          ${lastActivity ? new Date(lastActivity).toLocaleString(lang==='ar'?'ar-EG':'en-US') : tr('noActivityYet')}
+        </div>
+      </div>
+    `;
+  }
+
+
+  function render(){
+    let html = '';
+    if(view==='loading'){ html = `<div class="empty" style="padding-top:100px;">...</div>`; }
+    else if(view==='auth'){ html = renderAuth(); }
+    else if(view==='home'){ html = renderHome(); }
+    else if(view==='service-detail'){ html = renderServiceDetail(); }
+    else if(view==='myservices'){ html = renderMyServices(); }
+    else if(view==='service-form'){ html = renderServiceForm(); }
+    else if(view==='myorders'){ html = renderMyOrders(); }
+    else if(view==='notifications'){ html = renderNotifications(); }
+    else if(view==='review-form'){ html = renderReviewForm(); }
+    else if(view==='portfolio'){ html = renderPortfolio(); }
+    else if(view==='portfolio-form'){ html = renderPortfolioForm(); }
+    else if(view==='provider-profile'){ html = renderProviderProfile(); }
+    else if(view==='chat'){ html = renderChat(); }
+    else if(view==='report-form'){ html = renderReportForm(); }
+    else if(view==='reports-admin'){ html = renderReportsAdmin(); }
+    else if(view==='admin-stats'){ html = renderAdminStats(); }
+    if(toastMsg){ html += `<div class="toast">${escapeHtml(toastMsg)}</div>`; }
+    root.innerHTML = html;
+    attachDynamicListeners();
+  }
+
+  function attachDynamicListeners(){
+    const searchInput = document.getElementById('search-input');
+    if(searchInput){ searchInput.addEventListener('input', (e)=>{ searchQuery = e.target.value; render(); }); }
+
+    const an = document.getElementById('auth-name'); if(an) an.addEventListener('input', e=>authName=e.target.value);
+    const ae = document.getElementById('auth-email'); if(ae) ae.addEventListener('input', e=>authEmail=e.target.value);
+    const ap = document.getElementById('auth-password'); if(ap) ap.addEventListener('input', e=>authPassword=e.target.value);
+    const ac = document.getElementById('auth-confirm'); if(ac) ac.addEventListener('input', e=>authConfirmPassword=e.target.value);
+    const aw = document.getElementById('auth-whatsapp'); if(aw) aw.addEventListener('input', e=>authWhatsapp=e.target.value);
+    const rse = document.getElementById('rs-email'); if(rse) rse.addEventListener('input', e=>rsEmail=e.target.value);
+    const rsnp = document.getElementById('rs-newpass'); if(rsnp) rsnp.addEventListener('input', e=>rsNewPassword=e.target.value);
+    const rscp = document.getElementById('rs-confirmpass'); if(rscp) rscp.addEventListener('input', e=>rsConfirmPassword=e.target.value);
+
+    const sfNameEl = document.getElementById('sf-name'); if(sfNameEl) sfNameEl.addEventListener('input', e=>sfName=e.target.value);
+    const sfCatEl = document.getElementById('sf-category'); if(sfCatEl) sfCatEl.addEventListener('change', e=>sfCategory=e.target.value);
+    const sfPriceEl = document.getElementById('sf-price');
+    if(sfPriceEl) sfPriceEl.addEventListener('input', e=>{ sfPrice = e.target.value.replace(/[^0-9]/g,''); e.target.value = sfPrice; });
+    const sfImageEl = document.getElementById('sf-image'); if(sfImageEl) sfImageEl.addEventListener('input', e=>sfImage=e.target.value);
+    const rvCommentEl = document.getElementById('rv-comment'); if(rvCommentEl) rvCommentEl.addEventListener('input', e=>rvComment=e.target.value);
+
+    const pfTitleEl = document.getElementById('pf-title'); if(pfTitleEl) pfTitleEl.addEventListener('input', e=>pfTitle=e.target.value);
+    const pfDescEl = document.getElementById('pf-desc'); if(pfDescEl) pfDescEl.addEventListener('input', e=>pfDesc=e.target.value);
+    const pfLinkEl = document.getElementById('pf-link'); if(pfLinkEl) pfLinkEl.addEventListener('input', e=>pfLink=e.target.value);
+    const pfImageEl = document.getElementById('pf-image'); if(pfImageEl) pfImageEl.addEventListener('input', e=>pfImage=e.target.value);
+    const chatInputEl = document.getElementById('chat-input'); if(chatInputEl) chatInputEl.addEventListener('input', e=>chatText=e.target.value);
+    const pmInfoEl = document.getElementById('pm-info'); if(pmInfoEl) pmInfoEl.addEventListener('input', e=>pmInfoDraft=e.target.value);
+    const rpReasonEl = document.getElementById('rp-reason'); if(rpReasonEl) rpReasonEl.addEventListener('change', e=>rpReason=e.target.value);
+    const rpDetailsEl = document.getElementById('rp-details'); if(rpDetailsEl) rpDetailsEl.addEventListener('input', e=>rpDetails=e.target.value);
+    document.querySelectorAll('.payment-ref-input').forEach(el=>{
+      el.addEventListener('input', e=>{ paymentRefDrafts[el.getAttribute('data-order-id')] = e.target.value; });
+    });
+    const sfDescEl = document.getElementById('sf-desc');
+    const sfWc = document.getElementById('sf-wordcount');
+    if(sfDescEl){
+      sfDescEl.addEventListener('input', e=>{
+        sfDesc = e.target.value;
+        if(sfWc){
+          const wc = wordCount(sfDesc);
+          sfWc.textContent = wc + ' / 100 ' + tr('wordsUnit');
+          sfWc.className = 'word-count ' + (wc>=100 ? 'ok' : 'low');
+        }
+      });
+    }
+  }
+
+  root.addEventListener('click', async (e)=>{
+    const t = e.target.closest('[data-action]');
+    if(!t) return;
+    const action = t.getAttribute('data-action');
+
+    if(action==='logout'){ logout(); }
+    else if(action==='toggle-lang'){ toggleLang(); }
+    else if(action==='toggle-dark'){ toggleDark(); }
+    else if(action==='toggle-auth-mode'){
+      authMode = authMode==='login' ? 'signup' : 'login';
+      authPassword=''; authConfirmPassword='';
+      render();
+    }
+    else if(action==='go-reset-password'){
+      authMode='reset'; resetStage='email'; rsEmail=''; rsNewPassword=''; rsConfirmPassword='';
+      render();
+    }
+    else if(action==='reset-continue'){
+      showToast(tr('resetContactAdmin'));
+    }
+    else if(action==='reset-submit'){
+      showToast(tr('resetContactAdmin'));
+    }
+    else if(action==='pick-role'){ authRole = t.getAttribute('data-role'); render(); }
+    else if(action==='login-submit'){
+      const email = authEmail.trim();
+      const password = authPassword;
+      if(!isValidEmail(email)){ showToast(tr('invalidEmail')); return; }
+      if(!password){ showToast(tr('shortPassword')); return; }
+      const hash = await hashPassword(email, password);
+      let res;
+      try{ res = await api({action:'login', email, passwordHash:hash}); }
+      catch(e){ showToast(tr('networkError')); return; }
+      if(!res || !res.ok){ showToast(tr('wrongCredentials')); return; }
+      profile = res.user;
+      await saveSession(res.user.id, res.user.email);
+      try{ await fetchAll(); lastFetch = Date.now(); }catch(e){}
+      authEmail=''; authPassword='';
+      view = 'home';
+      render();
+    }
+    else if(action==='signup-submit'){
+      const name = authName.trim();
+      const email = authEmail.trim();
+      const password = authPassword;
+      const confirm = authConfirmPassword;
+      if(!name){ showToast(tr('fillName')); return; }
+      if(!isValidEmail(email)){ showToast(tr('invalidEmail')); return; }
+      if(password.length<6){ showToast(tr('shortPassword')); return; }
+      if(password!==confirm){ showToast(tr('passwordMismatch')); return; }
+      const hash = await hashPassword(email, password);
+      const newUser = {id:uid(), name, email, passwordHash:hash, whatsapp:authWhatsapp.trim(), role:authRole};
+      let res;
+      try{ res = await api({action:'register', user:newUser}); }
+      catch(e){ showToast(tr('networkError')); return; }
+      if(!res || !res.ok){ showToast(res && res.error==='EMAIL_EXISTS' ? tr('emailTaken') : tr('networkError')); return; }
+      profile = res.user;
+      await saveSession(res.user.id, res.user.email);
+      try{ await fetchAll(); lastFetch = Date.now(); }catch(e){}
+      authName='';authEmail='';authPassword='';authConfirmPassword='';authWhatsapp='';authRole='client';
+      view = 'home';
+      render();
+    }
+    else if(action==='go-home'){ view='home'; render(); }
+    else if(action==='go-myservices'){ pmInfoDraft = profile.paymentInfo || ''; view='myservices'; render(); }
+    else if(action==='go-myorders'){ view='myorders'; render(); }
+    else if(action==='filter-cat'){ filterCategory = t.getAttribute('data-cat'); render(); }
+    else if(action==='open-service'){ selectedServiceId = t.getAttribute('data-id'); view='service-detail'; render(); }
+    else if(action==='save-payment-info'){
+      profile.paymentInfo = pmInfoDraft.trim();
+      await saveUsers();
+      showToast(tr('savedSuccess'));
+    }
+    else if(action==='add-service-form'){
+      editingServiceId=null; sfName=''; sfCategory=CATEGORIES[0].id; sfPrice=''; sfDesc=''; sfImage='';
+      view='service-form'; render();
+    }
+    else if(action==='edit-service'){
+      editingServiceId = t.getAttribute('data-id');
+      const s = services.find(x=>x.id===editingServiceId);
+      sfName=s.name; sfCategory=s.category; sfPrice=String(s.price); sfDesc=s.description; sfImage=s.image||'';
+      view='service-form'; render();
+    }
+    else if(action==='delete-service'){
+      services = services.filter(s=>s.id!==t.getAttribute('data-id'));
+      await saveServices();
+      render();
+      showToast(tr('deletedService'));
+    }
+    else if(action==='save-service'){
+      const name = sfName.trim();
+      const category = sfCategory;
+      const price = Number(sfPrice);
+      const description = sfDesc.trim();
+      const image = sfImage.trim();
+      if(!name){ showToast(tr('fillServiceName')); return; }
+      if(!description){ showToast(tr('fillDesc')); return; }
+      if(wordCount(description) < 100){ showToast(tr('descTooShort')); return; }
+      if(!price || isNaN(price)){ showToast(tr('fillPrice')); return; }
+
+      if(editingServiceId){
+        const idx = services.findIndex(s=>s.id===editingServiceId);
+        services[idx] = {...services[idx], name, category, price, description, image};
+      } else {
+        services.push({
+          id: uid(), name, category, price, description, image,
+          ownerId: profile.id, ownerName: profile.name, ownerWhatsapp: profile.whatsapp || ''
+        });
+      }
+      await saveServices();
+      editingServiceId = null;
+      sfName='';sfCategory=CATEGORIES[0].id;sfPrice='';sfDesc='';sfImage='';
+      view = 'myservices';
+      render();
+      showToast(tr('savedSuccess'));
+    }
+    else if(action==='place-order'){
+      const s = services.find(x=>x.id===t.getAttribute('data-id'));
+      if(!s) return;
+      const newOrder = {
+        id: uid(), serviceId:s.id, serviceName:s.name, price:s.price,
+        clientId: profile.id, clientName: profile.name, clientWhatsapp: profile.whatsapp||'',
+        providerId: s.ownerId, providerName: s.ownerName, providerWhatsapp: s.ownerWhatsapp||'',
+        status:'pending', paymentStatus:'not_paid', paymentReference:'', createdAt: Date.now()
+      };
+      orders.push(newOrder);
+      notifications.push({id:uid(), userId:s.ownerId, type:'new_order', data:{serviceName:s.name}, read:false, createdAt:Date.now()});
+      await saveOrders();
+      await saveNotifications();
+      view = 'myorders';
+      render();
+      showToast(tr('orderSuccess'));
+    }
+    else if(action==='go-portfolio'){ view='portfolio'; render(); }
+    else if(action==='add-portfolio-form'){
+      editingPortfolioId=null; pfTitle=''; pfDesc=''; pfLink=''; pfImage='';
+      view='portfolio-form'; render();
+    }
+    else if(action==='edit-portfolio'){
+      editingPortfolioId = t.getAttribute('data-id');
+      const p = (profile.portfolio||[]).find(x=>x.id===editingPortfolioId);
+      if(p){ pfTitle=p.title; pfDesc=p.description; pfLink=p.link||''; pfImage=p.image||''; }
+      view='portfolio-form'; render();
+    }
+    else if(action==='delete-portfolio'){
+      profile.portfolio = (profile.portfolio||[]).filter(p=>p.id!==t.getAttribute('data-id'));
+      await saveUsers();
+      render();
+      showToast(tr('deletedService'));
+    }
+    else if(action==='save-portfolio'){
+      const title = pfTitle.trim();
+      const description = pfDesc.trim();
+      const link = pfLink.trim();
+      const image = pfImage.trim();
+      if(!title){ showToast(tr('fillPortfolioTitle')); return; }
+      if(!Array.isArray(profile.portfolio)) profile.portfolio = [];
+      if(editingPortfolioId){
+        const idx = profile.portfolio.findIndex(p=>p.id===editingPortfolioId);
+        if(idx>-1) profile.portfolio[idx] = {...profile.portfolio[idx], title, description, link, image};
+      } else {
+        profile.portfolio.push({id:uid(), title, description, link, image});
+      }
+      await saveUsers();
+      editingPortfolioId=null; pfTitle='';pfDesc='';pfLink='';pfImage='';
+      view='portfolio';
+      render();
+      showToast(tr('savedSuccess'));
+    }
+    else if(action==='open-profile'){
+      viewingProviderId = t.getAttribute('data-id');
+      view='provider-profile';
+      render();
+    }
+    else if(action==='submit-payment'){
+      const orderId = t.getAttribute('data-id');
+      const ref = (paymentRefDrafts[orderId] || '').trim();
+      if(!ref){ showToast(tr('fillReference')); return; }
+      const idx = orders.findIndex(o=>o.id===orderId);
+      if(idx>-1){
+        orders[idx].paymentStatus = 'awaiting_confirmation';
+        orders[idx].paymentReference = ref;
+        notifications.push({id:uid(), userId:orders[idx].providerId, type:'payment_submitted', data:{serviceName:orders[idx].serviceName}, read:false, createdAt:Date.now()});
+        await saveOrders();
+        await saveNotifications();
+        delete paymentRefDrafts[orderId];
+        render();
+        showToast(tr('paymentSubmittedToast'));
+      }
+    }
+    else if(action==='confirm-payment'){
+      const orderId = t.getAttribute('data-id');
+      const idx = orders.findIndex(o=>o.id===orderId);
+      if(idx>-1){
+        orders[idx].paymentStatus = 'confirmed';
+        notifications.push({id:uid(), userId:orders[idx].clientId, type:'payment_confirmed', data:{serviceName:orders[idx].serviceName}, read:false, createdAt:Date.now()});
+        await saveOrders();
+        await saveNotifications();
+        render();
+        showToast(tr('paymentConfirmedToast'));
+      }
+    }
+    else if(action==='open-chat'){
+      chatOrderId = t.getAttribute('data-id');
+      chatText='';
+      view='chat';
+      render();
+    }
+    else if(action==='send-message'){
+      const inputEl = document.getElementById('chat-input');
+      const text = (chatText || (inputEl?inputEl.value:'')).trim();
+      if(!text) return;
+      const o = orders.find(x=>x.id===chatOrderId);
+      if(!o) return;
+      const otherId = profile.id===o.clientId ? o.providerId : o.clientId;
+      messages.push({id:uid(), orderId:o.id, senderId:profile.id, senderName:profile.name, text, createdAt:Date.now()});
+      notifications.push({id:uid(), userId:otherId, type:'new_message', data:{senderName:profile.name, serviceName:o.serviceName, orderId:o.id}, read:false, createdAt:Date.now()});
+      await saveMessages();
+      await saveNotifications();
+      chatText='';
+      render();
+    }
+    else if(action==='go-notifications'){ view='notifications'; render(); }
+    else if(action==='open-report'){
+      reportTargetType = t.getAttribute('data-type');
+      reportTargetId = t.getAttribute('data-id');
+      reportTargetName = t.getAttribute('data-name');
+      rpReason = REPORT_REASONS[0].id; rpDetails='';
+      view = 'report-form';
+      render();
+    }
+    else if(action==='submit-report'){
+      const reasonEl = document.getElementById('rp-reason');
+      const detailsEl = document.getElementById('rp-details');
+      const reason = reasonEl ? reasonEl.value : rpReason;
+      const details = detailsEl ? detailsEl.value.trim() : rpDetails.trim();
+      reports.push({
+        id: uid(), reporterId: profile.id, reporterName: profile.name,
+        targetType: reportTargetType, targetId: reportTargetId, targetName: reportTargetName,
+        reason, details, status:'open', createdAt: Date.now()
+      });
+      await saveReports();
+      reportTargetType=null; reportTargetId=null; reportTargetName=null; rpDetails='';
+      view = 'home';
+      render();
+      showToast(tr('reportSubmitted'));
+    }
+    else if(action==='go-reports-admin'){ view='reports-admin'; render(); }
+    else if(action==='go-admin-stats'){ view='admin-stats'; render(); }
+    else if(action==='mark-reviewed'){
+      const r = reports.find(x=>x.id===t.getAttribute('data-id'));
+      if(r){ r.status='reviewed'; await saveReports(); render(); }
+    }
+    else if(action==='mark-all-read'){
+      notifications.forEach(n=>{ if(n.userId===profile.id) n.read=true; });
+      await saveNotifications();
+      render();
+    }
+    else if(action==='open-notification'){
+      const n = notifications.find(x=>x.id===t.getAttribute('data-id'));
+      if(!n) return;
+      if(!n.read){ n.read = true; await saveNotifications(); }
+      if(n.type==='new_review' && n.data.serviceId){ selectedServiceId = n.data.serviceId; view='service-detail'; }
+      else if(n.type==='new_message' && n.data.orderId){ chatOrderId = n.data.orderId; view='chat'; }
+      else { view = 'myorders'; }
+      render();
+    }
+    else if(action==='open-review'){
+      reviewOrderId = t.getAttribute('data-id');
+      rvRating = 5; rvComment = '';
+      view = 'review-form';
+      render();
+    }
+    else if(action==='pick-rating'){ rvRating = Number(t.getAttribute('data-val')); render(); }
+    else if(action==='submit-review'){
+      const o = orders.find(x=>x.id===reviewOrderId);
+      if(!o) return;
+      const commentEl = document.getElementById('rv-comment');
+      const comment = commentEl ? commentEl.value.trim() : '';
+      reviews.push({id:uid(), serviceId:o.serviceId, orderId:o.id, clientId:profile.id, clientName:profile.name, rating:rvRating, comment, createdAt:Date.now()});
+      notifications.push({id:uid(), userId:o.providerId, type:'new_review', data:{serviceName:o.serviceName, rating:rvRating, serviceId:o.serviceId}, read:false, createdAt:Date.now()});
+      await saveReviews();
+      await saveNotifications();
+      reviewOrderId = null; rvRating=5; rvComment='';
+      view = 'myorders';
+      render();
+      showToast(tr('reviewSubmitted'));
+    }
+  });
+
+  root.addEventListener('change', async (e)=>{
+    const t = e.target.closest('[data-action="update-status"]');
+    if(!t) return;
+    const id = t.getAttribute('data-id');
+    const idx = orders.findIndex(o=>o.id===id);
+    if(idx>-1){
+      orders[idx].status = t.value;
+      notifications.push({id:uid(), userId:orders[idx].clientId, type:'status_changed', data:{serviceName:orders[idx].serviceName, status:t.value}, read:false, createdAt:Date.now()});
+      await saveOrders();
+      await saveNotifications();
+      showToast(tr('statusUpdated'));
+    }
+  });
+
+  loadAll();
+})();
+</script>
+</body>
+</html>
