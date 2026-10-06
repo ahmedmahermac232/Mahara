@@ -468,7 +468,9 @@
 
   // ---------------- backend (n8n) ----------------
   const API_URL = 'https://ahmedmahir232.app.n8n.cloud/webhook/mahara-api';
+  let authToken = '';
   async function api(payload){
+    if(authToken) payload.token = authToken;
     const r = await fetch(API_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(payload)});
     if(!r.ok) throw new Error('HTTP '+r.status);
     return await r.json();
@@ -510,7 +512,8 @@
   }
 
   async function fetchAll(){
-    const d = await api({action:'listAll', userId: profile ? profile.id : ''});
+    const d = await api({action:'listAll'});
+    if(d && d.error==='UNAUTHORIZED'){ const e = new Error('UNAUTHORIZED'); e.unauthorized = true; throw e; }
     if(!d || !d.ok) throw new Error('bad response');
     users = d.users || [];
     services = d.services || [];
@@ -543,7 +546,9 @@
       const a = document.activeElement;
       if(a && (a.tagName==='INPUT' || a.tagName==='TEXTAREA' || a.tagName==='SELECT')) return;
       render();
-    }catch(e){}
+    }catch(e){
+      if(e && e.unauthorized){ logout(); }
+    }
   }
   document.addEventListener('visibilitychange', ()=>{
     if(document.visibilityState==='visible' && Date.now()-lastFetch > 30000) refreshData();
@@ -558,7 +563,9 @@
     applyChrome();
     render();
     const sess = lsGet('session') || {};
-    profile = sess.userId ? {id:sess.userId, email:sess.email||''} : null;
+    authToken = sess.token || '';
+    profile = (sess.userId && authToken) ? {id:sess.userId, email:sess.email||''} : null;
+    if(!profile){ view = 'auth'; render(); return; }
     try{
       await fetchAll();
       lastFetch = Date.now();
@@ -566,7 +573,7 @@
       profile = null;
       view = 'auth';
       render();
-      showToast(tr('networkError'));
+      if(!(e && e.unauthorized)){ showToast(tr('networkError')); }
       return;
     }
     view = profile ? 'home' : 'auth';
@@ -593,8 +600,8 @@
   async function saveNotifications(){ await safeSync('notifications', notifications); }
   async function saveMessages(){ await safeSync('messages', messages); }
   async function saveReports(){ await safeSync('reports', reports); }
-  async function saveSession(userId, email){ lsSet('session', {userId, email: email||''}); }
-  async function clearSession(){ lsSet('session', {userId:null, email:''}); }
+  async function saveSession(userId, email, token){ lsSet('session', {userId, email: email||'', token: token||''}); }
+  async function clearSession(){ authToken = ''; lsSet('session', {userId:null, email:'', token:''}); }
 
   function logout(){
     profile = null;
@@ -1348,7 +1355,7 @@
       catch(e){ showToast(tr('networkError')); return; }
       if(!res || !res.ok){ showToast(tr('wrongCredentials')); return; }
       profile = res.user;
-      await saveSession(res.user.id, res.user.email);
+      authToken = res.token || ''; await saveSession(res.user.id, res.user.email, authToken);
       try{ await fetchAll(); lastFetch = Date.now(); }catch(e){}
       authEmail=''; authPassword='';
       view = 'home';
@@ -1370,7 +1377,7 @@
       catch(e){ showToast(tr('networkError')); return; }
       if(!res || !res.ok){ showToast(res && res.error==='EMAIL_EXISTS' ? tr('emailTaken') : tr('networkError')); return; }
       profile = res.user;
-      await saveSession(res.user.id, res.user.email);
+      authToken = res.token || ''; await saveSession(res.user.id, res.user.email, authToken);
       try{ await fetchAll(); lastFetch = Date.now(); }catch(e){}
       authName='';authEmail='';authPassword='';authConfirmPassword='';authWhatsapp='';authRole='client';
       view = 'home';
