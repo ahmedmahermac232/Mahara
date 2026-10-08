@@ -283,7 +283,8 @@
     noActivityYet:{ar:'لا يوجد نشاط بعد', en:'No activity yet'},
     forgotPassword:{ar:'نسيت كلمة المرور؟', en:'Forgot password?'},
     networkError:{ar:'تعذّر الاتصال بالخادم، حاول مرة أخرى', en:'Could not reach the server, please try again'},
-    resetContactAdmin:{ar:'لإعادة تعيين كلمة المرور تواصل مع إدارة مهارة', en:'To reset your password, please contact Mahara support'},
+    resetEmailSent:{ar:'إذا كان الإيميل مسجلاً لدينا، فقد أرسلنا إليه رابط إعادة التعيين (تحقق أيضاً من البريد المزعج)', en:'If this email is registered, we sent it a reset link (check spam too)'},
+    resetLinkInvalid:{ar:'رابط إعادة التعيين غير صالح أو انتهت صلاحيته، اطلب رابطاً جديداً', en:'This reset link is invalid or has expired. Please request a new one'},
     resetPasswordTitle:{ar:'إعادة تعيين كلمة المرور', en:'Reset password'},
     newPasswordLabel:{ar:'كلمة المرور الجديدة', en:'New password'},
     resetPasswordBtn:{ar:'تحديث كلمة المرور', en:'Update password'},
@@ -367,6 +368,7 @@
   let authName='', authEmail='', authPassword='', authConfirmPassword='', authWhatsapp='', authRole='client';
   let resetStage='email';
   let rsEmail='', rsNewPassword='', rsConfirmPassword='';
+  let resetToken='';
   let sfName='', sfCategory=CATEGORIES[0].id, sfPrice='', sfDesc='', sfImage='';
 
   const root = document.getElementById('root');
@@ -562,6 +564,19 @@
     if(s){ lang = s.lang || 'ar'; darkMode = !!s.dark; }
     applyChrome();
     render();
+    try{
+      const qs = new URLSearchParams(location.search);
+      const rt = qs.get('reset');
+      if(rt){
+        resetToken = rt;
+        rsEmail = (qs.get('e')||'').trim();
+        authMode = 'reset'; resetStage = 'newpass';
+        history.replaceState(null, '', location.pathname);
+        await clearSession();
+        profile = null; view = 'auth'; render();
+        return;
+      }
+    }catch(e){}
     const sess = lsGet('session') || {};
     authToken = sess.token || '';
     profile = (sess.userId && authToken) ? {id:sess.userId, email:sess.email||''} : null;
@@ -1338,10 +1353,25 @@
       render();
     }
     else if(action==='reset-continue'){
-      showToast(tr('resetContactAdmin'));
+      const email = rsEmail.trim();
+      if(!isValidEmail(email)){ showToast(tr('invalidEmail')); return; }
+      try{ await api({action:'requestReset', email}); showToast(tr('resetEmailSent')); }
+      catch(e){ showToast(tr('networkError')); }
     }
     else if(action==='reset-submit'){
-      showToast(tr('resetContactAdmin'));
+      if(rsNewPassword.length<6){ showToast(tr('shortPassword')); return; }
+      if(rsNewPassword!==rsConfirmPassword){ showToast(tr('passwordMismatch')); return; }
+      let res;
+      try{
+        const hash = await hashPassword(rsEmail, rsNewPassword);
+        res = await api({action:'resetPassword', resetToken, passwordHash:hash});
+      }catch(e){ showToast(tr('networkError')); return; }
+      if(!res || !res.ok){ showToast(tr('resetLinkInvalid')); return; }
+      showToast(tr('passwordResetSuccess'));
+      authEmail = rsEmail; authPassword = '';
+      resetToken=''; rsNewPassword=''; rsConfirmPassword='';
+      authMode='login';
+      render();
     }
     else if(action==='pick-role'){ authRole = t.getAttribute('data-role'); render(); }
     else if(action==='login-submit'){
