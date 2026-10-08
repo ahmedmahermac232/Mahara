@@ -171,8 +171,12 @@
     serviceNameLabel:{ar:'اسم الخدمة', en:'Service name'},
     categoryLabel:{ar:'التصنيف', en:'Category'},
     priceLabel:{ar:'السعر (ج.س)', en:'Price (SDG)'},
-    descLabel:{ar:'وصف الخدمة (100 كلمة على الأقل)', en:'Service description (at least 100 words)'},
-    imageLabel:{ar:'رابط صورة للخدمة (اختياري)', en:'Service image URL (optional)'},
+    descLabel:{ar:'وصف الخدمة (50 كلمة على الأقل)', en:'Service description (at least 50 words)'},
+    imageLabel:{ar:'صورة للخدمة (اختياري)', en:'Service image (optional)'},
+    chooseImage:{ar:'اختيار صورة', en:'Choose image'},
+    changeImage:{ar:'تغيير الصورة', en:'Change image'},
+    removeImage:{ar:'حذف الصورة', en:'Remove image'},
+    imageError:{ar:'تعذّر قراءة الصورة، جرّب صورة JPG أو PNG أخرى', en:'Could not read the image, try another JPG or PNG'},
     saveChangesBtn:{ar:'حفظ التعديلات', en:'Save changes'},
     publishBtn:{ar:'نشر الخدمة', en:'Publish service'},
     backBtn:{ar:'→ رجوع', en:'← Back'},
@@ -195,7 +199,7 @@
     fillName:{ar:'يرجى إدخال اسمك أولاً', en:'Please enter your name first'},
     fillServiceName:{ar:'يرجى إدخال اسم الخدمة', en:'Enter the service name'},
     fillDesc:{ar:'يرجى إدخال وصف للخدمة', en:'Enter a service description'},
-    descTooShort:{ar:'يجب ألا يقل الوصف عن 100 كلمة', en:'Description must be at least 100 words'},
+    descTooShort:{ar:'يجب ألا يقل الوصف عن 50 كلمة', en:'Description must be at least 50 words'},
     fillPrice:{ar:'يرجى إدخال سعر صحيح', en:'Enter a valid price'},
     invalidEmail:{ar:'يرجى إدخال بريد إلكتروني صحيح', en:'Enter a valid email address'},
     shortPassword:{ar:'يجب ألا تقل كلمة المرور عن 6 أحرف', en:'Password must be at least 6 characters'},
@@ -221,7 +225,7 @@
     portfolioItemTitleLabel:{ar:'عنوان العمل', en:'Work title'},
     portfolioItemDescLabel:{ar:'وصف مختصر', en:'Short description'},
     portfolioItemLinkLabel:{ar:'رابط (اختياري)', en:'Link (optional)'},
-    portfolioItemImageLabel:{ar:'رابط صورة (اختياري)', en:'Image URL (optional)'},
+    portfolioItemImageLabel:{ar:'صورة (اختياري)', en:'Image (optional)'},
     savePortfolioItem:{ar:'حفظ', en:'Save'},
     viewProfile:{ar:'عرض الملف الشخصي', en:'View profile'},
     providerProfileTitle:{ar:'الملف الشخصي لمقدم الخدمة', en:'Provider profile'},
@@ -378,6 +382,40 @@
   function formatPrice(p){
     const n = Number(p).toLocaleString('en-US');
     return lang==='ar' ? n + ' ج.س' : n + ' SDG';
+  }
+  const MIN_DESC_WORDS = 50;
+  function compressImage(file, maxSide, quality){
+    return new Promise((resolve, reject)=>{
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = ()=>{
+        const img = new Image();
+        img.onerror = reject;
+        img.onload = ()=>{
+          const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+          const w = Math.max(1, Math.round(img.width * scale));
+          const h = Math.max(1, Math.round(img.height * scale));
+          const c = document.createElement('canvas');
+          c.width = w; c.height = h;
+          const ctx = c.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(c.toDataURL('image/jpeg', quality));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  function imagePicker(id, current, removeAction){
+    return `
+      <input type="file" id="${id}" accept="image/jpeg,image/png,image/webp" style="display:none">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        ${current ? `<img src="${escapeHtml(current)}" style="width:72px;height:72px;object-fit:cover;border-radius:10px;">` : ''}
+        <button type="button" class="btn btn-secondary" style="width:auto;padding:8px 16px;" onclick="document.getElementById('${id}').click()">${tr(current ? 'changeImage' : 'chooseImage')}</button>
+        ${current ? `<button type="button" class="link-btn" data-action="${removeAction}">${tr('removeImage')}</button>` : ''}
+      </div>`;
   }
   function wordCount(str){ return (str||'').trim().split(/\s+/).filter(Boolean).length; }
   function isValidEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
@@ -867,7 +905,7 @@
   function renderServiceForm(){
     const editing = !!editingServiceId;
     const wc = wordCount(sfDesc);
-    const wcClass = wc>=100 ? 'ok' : 'low';
+    const wcClass = wc>=MIN_DESC_WORDS ? 'ok' : 'low';
     return `
       ${renderHeader('myservices')}
       <div class="content">
@@ -890,12 +928,12 @@
           </div>
           <div class="field">
             <label>${tr('imageLabel')}</label>
-            <input type="url" id="sf-image" value="${escapeHtml(sfImage)}" placeholder="https://..." dir="ltr">
+            ${imagePicker('sf-image-file', sfImage, 'sf-remove-image')}
           </div>
           <div class="field">
             <label>${tr('descLabel')}</label>
             <textarea id="sf-desc">${escapeHtml(sfDesc)}</textarea>
-            <div class="word-count ${wcClass}" id="sf-wordcount">${wc} / 100 ${tr('wordsUnit')}</div>
+            <div class="word-count ${wcClass}" id="sf-wordcount">${wc} / ${MIN_DESC_WORDS} ${tr('wordsUnit')}</div>
           </div>
           <button type="button" class="btn btn-primary" data-action="save-service">${editing?tr('saveChangesBtn'):tr('publishBtn')}</button>
         </div>
@@ -1075,7 +1113,7 @@
           <div class="field"><label>${tr('portfolioItemTitleLabel')}</label><input type="text" id="pf-title" value="${escapeHtml(pfTitle)}"></div>
           <div class="field"><label>${tr('portfolioItemDescLabel')}</label><textarea id="pf-desc" style="min-height:80px;">${escapeHtml(pfDesc)}</textarea></div>
           <div class="field"><label>${tr('portfolioItemLinkLabel')}</label><input type="url" id="pf-link" value="${escapeHtml(pfLink)}" dir="ltr" placeholder="https://..."></div>
-          <div class="field"><label>${tr('portfolioItemImageLabel')}</label><input type="url" id="pf-image" value="${escapeHtml(pfImage)}" dir="ltr" placeholder="https://..."></div>
+          <div class="field"><label>${tr('portfolioItemImageLabel')}</label>${imagePicker('pf-image-file', pfImage, 'pf-remove-image')}</div>
           <button type="button" class="btn btn-primary" data-action="save-portfolio">${editing?tr('saveChangesBtn'):tr('savePortfolioItem')}</button>
         </div>
       </div>
@@ -1307,13 +1345,21 @@
     const sfCatEl = document.getElementById('sf-category'); if(sfCatEl) sfCatEl.addEventListener('change', e=>sfCategory=e.target.value);
     const sfPriceEl = document.getElementById('sf-price');
     if(sfPriceEl) sfPriceEl.addEventListener('input', e=>{ sfPrice = e.target.value.replace(/[^0-9]/g,''); e.target.value = sfPrice; });
-    const sfImageEl = document.getElementById('sf-image'); if(sfImageEl) sfImageEl.addEventListener('input', e=>sfImage=e.target.value);
+    const sfFileEl = document.getElementById('sf-image-file');
+    if(sfFileEl) sfFileEl.addEventListener('change', async e=>{
+      const f = e.target.files && e.target.files[0]; if(!f) return;
+      try{ sfImage = await compressImage(f, 700, 0.65); render(); }catch(err){ showToast(tr('imageError')); }
+    });
     const rvCommentEl = document.getElementById('rv-comment'); if(rvCommentEl) rvCommentEl.addEventListener('input', e=>rvComment=e.target.value);
 
     const pfTitleEl = document.getElementById('pf-title'); if(pfTitleEl) pfTitleEl.addEventListener('input', e=>pfTitle=e.target.value);
     const pfDescEl = document.getElementById('pf-desc'); if(pfDescEl) pfDescEl.addEventListener('input', e=>pfDesc=e.target.value);
     const pfLinkEl = document.getElementById('pf-link'); if(pfLinkEl) pfLinkEl.addEventListener('input', e=>pfLink=e.target.value);
-    const pfImageEl = document.getElementById('pf-image'); if(pfImageEl) pfImageEl.addEventListener('input', e=>pfImage=e.target.value);
+    const pfFileEl = document.getElementById('pf-image-file');
+    if(pfFileEl) pfFileEl.addEventListener('change', async e=>{
+      const f = e.target.files && e.target.files[0]; if(!f) return;
+      try{ pfImage = await compressImage(f, 700, 0.65); render(); }catch(err){ showToast(tr('imageError')); }
+    });
     const chatInputEl = document.getElementById('chat-input'); if(chatInputEl) chatInputEl.addEventListener('input', e=>chatText=e.target.value);
     const pmInfoEl = document.getElementById('pm-info'); if(pmInfoEl) pmInfoEl.addEventListener('input', e=>pmInfoDraft=e.target.value);
     const rpReasonEl = document.getElementById('rp-reason'); if(rpReasonEl) rpReasonEl.addEventListener('change', e=>rpReason=e.target.value);
@@ -1328,8 +1374,8 @@
         sfDesc = e.target.value;
         if(sfWc){
           const wc = wordCount(sfDesc);
-          sfWc.textContent = wc + ' / 100 ' + tr('wordsUnit');
-          sfWc.className = 'word-count ' + (wc>=100 ? 'ok' : 'low');
+          sfWc.textContent = wc + ' / ' + MIN_DESC_WORDS + ' ' + tr('wordsUnit');
+          sfWc.className = 'word-count ' + (wc>=MIN_DESC_WORDS ? 'ok' : 'low');
         }
       });
     }
@@ -1373,6 +1419,8 @@
       authMode='login';
       render();
     }
+    else if(action==='sf-remove-image'){ sfImage=''; render(); }
+    else if(action==='pf-remove-image'){ pfImage=''; render(); }
     else if(action==='pick-role'){ authRole = t.getAttribute('data-role'); render(); }
     else if(action==='login-submit'){
       const email = authEmail.trim();
@@ -1447,7 +1495,7 @@
       const image = sfImage.trim();
       if(!name){ showToast(tr('fillServiceName')); return; }
       if(!description){ showToast(tr('fillDesc')); return; }
-      if(wordCount(description) < 100){ showToast(tr('descTooShort')); return; }
+      if(wordCount(description) < MIN_DESC_WORDS){ showToast(tr('descTooShort')); return; }
       if(!price || isNaN(price)){ showToast(tr('fillPrice')); return; }
 
       if(editingServiceId){
