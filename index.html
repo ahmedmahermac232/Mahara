@@ -178,6 +178,31 @@
     removeImage:{ar:'حذف الصورة', en:'Remove image'},
     addImage:{ar:'إضافة صورة', en:'Add image'},
     maxImages:{ar:'الحد الأقصى 5 صور', en:'Maximum 5 images'},
+    accTitle:{ar:'حسابي', en:'My account'},
+    accPersonal:{ar:'المعلومات الشخصية', en:'Personal information'},
+    accPrivacy:{ar:'الخصوصية والأمن', en:'Privacy & security'},
+    accNotifs:{ar:'الإشعارات', en:'Notifications'},
+    accSettings:{ar:'إعدادات التطبيق', en:'App settings'},
+    accAppearance:{ar:'المظهر', en:'Appearance'},
+    accDark:{ar:'ليلي', en:'Dark'},
+    accLight:{ar:'نهاري', en:'Light'},
+    accLogout:{ar:'تسجيل خروج', en:'Log out'},
+    accName:{ar:'الاسم', en:'Name'},
+    accEmail:{ar:'البريد الإلكتروني', en:'Email'},
+    accEmailNote:{ar:'لا يمكن تغيير البريد حالياً', en:'Email cannot be changed for now'},
+    accPhone:{ar:'رقم الواتساب', en:'WhatsApp number'},
+    accAge:{ar:'العمر', en:'Age'},
+    accCity:{ar:'المدينة', en:'City'},
+    accSave:{ar:'حفظ التغييرات', en:'Save changes'},
+    accSaved:{ar:'تم حفظ المعلومات', en:'Information saved'},
+    accAgeInvalid:{ar:'أدخل عمراً صحيحاً (5 إلى 120)', en:'Enter a valid age (5 to 120)'},
+    accChangePwd:{ar:'تغيير كلمة المرور', en:'Change password'},
+    accCurPwd:{ar:'كلمة المرور الحالية', en:'Current password'},
+    accNewPwd:{ar:'كلمة المرور الجديدة', en:'New password'},
+    accConfirmPwd:{ar:'تأكيد كلمة المرور الجديدة', en:'Confirm new password'},
+    accPwdChanged:{ar:'تم تغيير كلمة المرور', en:'Password changed'},
+    accWrongPwd:{ar:'كلمة المرور الحالية غير صحيحة', en:'Current password is incorrect'},
+    accLanguage:{ar:'اللغة', en:'Language'},
     imageError:{ar:'تعذّر قراءة الصورة، جرّب صورة JPG أو PNG أخرى', en:'Could not read the image, try another JPG or PNG'},
     saveChangesBtn:{ar:'حفظ التعديلات', en:'Save changes'},
     publishBtn:{ar:'نشر الخدمة', en:'Publish service'},
@@ -375,6 +400,7 @@
   let resetStage='email';
   let rsEmail='', rsNewPassword='', rsConfirmPassword='';
   let resetToken='';
+  let piState=null, cpState=null;
   let sfName='', sfCategory=CATEGORIES[0].id, sfPrice='', sfDesc='', sfImages=[];
 
   const root = document.getElementById('root');
@@ -584,7 +610,7 @@
     try{ await syncTable(table, arr); }
     catch(e){ showToast(tr('networkError')); }
   }
-  function userSig(u){ return JSON.stringify({name:u.name, whatsapp:u.whatsapp, paymentInfo:u.paymentInfo||''}); }
+  function userSig(u){ return JSON.stringify({name:u.name, whatsapp:u.whatsapp, paymentInfo:u.paymentInfo||'', age:u.age||'', city:u.city||'', avatar:u.avatar||''}); }
   function allPortfolioItems(){
     const out = [];
     users.forEach(u=>{ (u.portfolio||[]).forEach(p=>out.push(Object.assign({}, p, {userId:u.id}))); });
@@ -679,7 +705,7 @@
       for(const u of users){
         const sig = userSig(u);
         if(synced.users && synced.users[u.id] !== undefined && synced.users[u.id] !== sig){
-          const res = await api({action:'update', table:'users', id:u.id, fields:{name:u.name, whatsapp:u.whatsapp, paymentInfo:u.paymentInfo||''}});
+          const res = await api({action:'update', table:'users', id:u.id, fields:{name:u.name, whatsapp:u.whatsapp, paymentInfo:u.paymentInfo||'', age:u.age||'', city:u.city||'', avatar:u.avatar||''}});
           if(!res || !res.ok) throw new Error('sync failed');
         }
         synced.users[u.id] = sig;
@@ -741,7 +767,7 @@
             <div class="icon-btn" data-action="go-notifications" style="position:relative;">🔔${unreadCount()>0?`<span style="position:absolute;top:-4px;${lang==='ar'?'left':'right'}:-4px;background:var(--danger);color:#fff;border-radius:10px;font-size:9px;font-weight:700;padding:1px 4px;min-width:14px;">${unreadCount()}</span>`:''}</div>
             ${profile.email===ADMIN_EMAIL ? `<div class="icon-btn" data-action="go-reports-admin" title="reports">🚩</div>` : ''}
             ${profile.email===ADMIN_EMAIL ? `<div class="icon-btn" data-action="go-admin-stats" title="stats">📊</div>` : ''}
-            <div class="profile-chip" data-action="logout" title="${tr('logoutHint')}">👋 <b>${escapeHtml(profile.name)}</b></div>
+            <div class="profile-chip" data-action="go-account" title="${tr('accTitle')}">${avatarHtml(30)}</div>
           </div>
         </div>
         <div class="tabs">
@@ -1111,6 +1137,144 @@
     `;
   }
 
+  function avatarHtml(size){
+    const sz = size || 56;
+    const src = profile && profile.avatar;
+    if(src) return `<img src="${escapeHtml(src)}" alt="" style="width:${sz}px;height:${sz}px;border-radius:50%;object-fit:cover;display:block;">`;
+    const letter = escapeHtml(((profile && profile.name) || '?').charAt(0));
+    return `<span style="display:inline-flex;width:${sz}px;height:${sz}px;border-radius:50%;background:var(--primary);color:#fff;align-items:center;justify-content:center;font-weight:700;font-size:${Math.round(sz*0.42)}px;">${letter}</span>`;
+  }
+  function accRow(icon, label, action, extra){
+    return `<div data-action="${action}" style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;cursor:pointer;">
+      <span style="font-size:20px;">${icon}</span>
+      <span style="flex:1;font-weight:600;">${label}</span>
+      ${extra || ''}
+      <span style="color:var(--muted);">${lang==='ar' ? '‹' : '›'}</span>
+    </div>`;
+  }
+  function accPageHead(backAction, title){
+    return `
+      <div class="back-link" data-action="${backAction}">${tr('backBtn')}</div>
+      <div class="detail-title">${title}</div>`;
+  }
+  function renderAccount(){
+    return `
+      ${renderHeader('account')}
+      <div class="content">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 0 22px;">
+          ${avatarHtml(96)}
+          <div style="font-weight:800;font-size:18px;margin-top:6px;">${escapeHtml(profile.name)}</div>
+          <div style="font-size:13px;color:var(--muted);" dir="ltr">${escapeHtml(profile.email)}</div>
+        </div>
+        ${accRow('👤', tr('accPersonal'), 'go-personal-info')}
+        ${accRow('🔒', tr('accPrivacy'), 'go-privacy')}
+        ${accRow('🔔', tr('accNotifs'), 'go-notifications')}
+        ${accRow('⚙️', tr('accSettings'), 'go-app-settings')}
+        ${accRow(darkMode ? '☀️' : '🌙', tr('accAppearance'), 'toggle-dark', `<span style="font-size:13px;color:var(--muted);">${tr(darkMode ? 'accDark' : 'accLight')}</span>`)}
+        <div data-action="logout" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;margin-top:22px;border:1px solid var(--danger);color:var(--danger);border-radius:var(--radius);font-weight:700;cursor:pointer;">${tr('accLogout')}</div>
+      </div>`;
+  }
+  function renderPersonalInfo(){
+    const s = piState || {};
+    const av = s.avatar
+      ? `<img src="${escapeHtml(s.avatar)}" alt="" style="width:96px;height:96px;border-radius:50%;object-fit:cover;">`
+      : `<span style="display:inline-flex;width:96px;height:96px;border-radius:50%;background:var(--primary);color:#fff;align-items:center;justify-content:center;font-weight:700;font-size:40px;">${escapeHtml(((s.name || '?')).charAt(0))}</span>`;
+    return `
+      ${renderHeader('account')}
+      <div class="content">
+        ${accPageHead('go-account', tr('accPersonal'))}
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:6px 0 18px;">
+          ${av}
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;">
+            <label class="btn btn-secondary" style="width:auto;padding:8px 16px;cursor:pointer;margin:0;">${tr(s.avatar ? 'changeImage' : 'chooseImage')}<input type="file" id="avatar-file" accept="image/jpeg,image/png,image/webp" style="display:none"></label>
+            ${s.avatar ? `<button type="button" class="link-btn" data-action="pi-remove-avatar">${tr('removeImage')}</button>` : ''}
+          </div>
+        </div>
+        <div class="field"><label>${tr('accName')}</label><input type="text" id="pi-name" value="${escapeHtml(s.name || '')}"></div>
+        <div class="field"><label>${tr('accEmail')}</label><input type="text" value="${escapeHtml(profile.email)}" disabled dir="ltr"><div style="font-size:12px;color:var(--muted);margin-top:4px;">${tr('accEmailNote')}</div></div>
+        <div class="field"><label>${tr('accPhone')}</label><input type="tel" id="pi-whatsapp" value="${escapeHtml(s.whatsapp || '')}" dir="ltr"></div>
+        <div class="field"><label>${tr('accAge')}</label><input type="number" id="pi-age" value="${escapeHtml(String(s.age || ''))}" min="5" max="120" dir="ltr"></div>
+        <div class="field"><label>${tr('accCity')}</label><input type="text" id="pi-city" value="${escapeHtml(s.city || '')}"></div>
+        <button class="btn btn-primary" data-action="save-personal">${tr('accSave')}</button>
+      </div>`;
+  }
+  function renderPrivacy(){
+    return `
+      ${renderHeader('account')}
+      <div class="content">
+        ${accPageHead('go-account', tr('accPrivacy'))}
+        ${accRow('🔑', tr('accChangePwd'), 'go-change-password')}
+      </div>`;
+  }
+  function renderChangePassword(){
+    const s = cpState || {cur:'', nw:'', conf:''};
+    return `
+      ${renderHeader('account')}
+      <div class="content">
+        ${accPageHead('go-privacy', tr('accChangePwd'))}
+        <div class="field"><label>${tr('accCurPwd')}</label><input type="password" id="cp-cur" value="${escapeHtml(s.cur)}" dir="ltr"></div>
+        <div class="field"><label>${tr('accNewPwd')}</label><input type="password" id="cp-new" value="${escapeHtml(s.nw)}" dir="ltr"></div>
+        <div class="field"><label>${tr('accConfirmPwd')}</label><input type="password" id="cp-conf" value="${escapeHtml(s.conf)}" dir="ltr"></div>
+        <button class="btn btn-primary" data-action="submit-change-password">${tr('accSave')}</button>
+      </div>`;
+  }
+  function renderAppSettings(){
+    return `
+      ${renderHeader('account')}
+      <div class="content">
+        ${accPageHead('go-account', tr('accSettings'))}
+        ${accRow('🌐', tr('accLanguage'), 'toggle-lang', `<span style="font-size:13px;color:var(--muted);">${lang==='ar' ? 'العربية' : 'English'}</span>`)}
+      </div>`;
+  }
+  function attachAccountListeners(){
+    const av = document.getElementById('avatar-file');
+    if(av) av.addEventListener('change', async e=>{
+      const f = e.target.files && e.target.files[0]; if(!f) return;
+      try{ piState.avatar = await compressImage(f, 256, 0.7); }catch(err){ showToast(tr('imageError')); }
+      render();
+    });
+    const bind = (id, obj, key)=>{ const el = document.getElementById(id); if(el && obj) el.addEventListener('input', e=>{ obj[key] = e.target.value; }); };
+    bind('pi-name', piState, 'name');
+    bind('pi-whatsapp', piState, 'whatsapp');
+    bind('pi-age', piState, 'age');
+    bind('pi-city', piState, 'city');
+    bind('cp-cur', cpState, 'cur');
+    bind('cp-new', cpState, 'nw');
+    bind('cp-conf', cpState, 'conf');
+  }
+  async function savePersonal(){
+    const name = (piState.name || '').trim();
+    const age = String(piState.age || '').trim();
+    if(!name){ showToast(tr('fillName')); return; }
+    if(age && (!/^\d+$/.test(age) || Number(age) < 5 || Number(age) > 120)){ showToast(tr('accAgeInvalid')); return; }
+    Object.assign(profile, {
+      name: name,
+      whatsapp: (piState.whatsapp || '').trim(),
+      age: age,
+      city: (piState.city || '').trim(),
+      avatar: piState.avatar || ''
+    });
+    await saveUsers();
+    piState = null;
+    showToast(tr('accSaved'));
+    view = 'account'; render();
+  }
+  async function submitChangePassword(){
+    const cur = cpState.cur || '', nw = cpState.nw || '', conf = cpState.conf || '';
+    if(!cur || nw.length < 6){ showToast(tr('shortPassword')); return; }
+    if(nw !== conf){ showToast(tr('passwordMismatch')); return; }
+    let res;
+    try{
+      const oldHash = await hashPassword(profile.email, cur);
+      const newHash = await hashPassword(profile.email, nw);
+      res = await api({action:'update', table:'users', id:profile.id, fields:{password_hash:newHash}, oldPasswordHash:oldHash});
+    }catch(e){ showToast(tr('networkError')); return; }
+    if(!res || !res.ok){ showToast(res && res.error === 'WRONG_PASSWORD' ? tr('accWrongPwd') : tr('networkError')); return; }
+    cpState = null;
+    showToast(tr('accPwdChanged'));
+    view = 'privacy'; render();
+  }
+
   function renderPortfolio(){
     const items = profile.portfolio || [];
     const listHtml = items.length ? items.map(p=>`
@@ -1363,9 +1527,15 @@
     else if(view==='report-form'){ html = renderReportForm(); }
     else if(view==='reports-admin'){ html = renderReportsAdmin(); }
     else if(view==='admin-stats'){ html = renderAdminStats(); }
+    else if(view==='account'){ html = renderAccount(); }
+    else if(view==='personal-info'){ html = renderPersonalInfo(); }
+    else if(view==='privacy'){ html = renderPrivacy(); }
+    else if(view==='change-password'){ html = renderChangePassword(); }
+    else if(view==='app-settings'){ html = renderAppSettings(); }
     if(toastMsg){ html += `<div class="toast">${escapeHtml(toastMsg)}</div>`; }
     root.innerHTML = html;
     attachDynamicListeners();
+    attachAccountListeners();
   }
 
   function attachDynamicListeners(){
@@ -1459,6 +1629,14 @@
     }
     else if(action==='sf-remove-image'){ sfImages.splice(Number(t.getAttribute('data-idx')),1); render(); }
     else if(action==='pf-remove-image'){ pfImages.splice(Number(t.getAttribute('data-idx')),1); render(); }
+    else if(action==='go-account'){ view='account'; render(); }
+    else if(action==='go-personal-info'){ piState={name:profile.name||'', whatsapp:profile.whatsapp||'', age:profile.age||'', city:profile.city||'', avatar:profile.avatar||''}; view='personal-info'; render(); }
+    else if(action==='go-privacy'){ view='privacy'; render(); }
+    else if(action==='go-change-password'){ cpState={cur:'', nw:'', conf:''}; view='change-password'; render(); }
+    else if(action==='go-app-settings'){ view='app-settings'; render(); }
+    else if(action==='pi-remove-avatar'){ piState.avatar=''; render(); }
+    else if(action==='save-personal'){ await savePersonal(); }
+    else if(action==='submit-change-password'){ await submitChangePassword(); }
     else if(action==='pick-role'){ authRole = t.getAttribute('data-role'); render(); }
     else if(action==='login-submit'){
       const email = authEmail.trim();
