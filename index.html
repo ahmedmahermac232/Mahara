@@ -178,6 +178,10 @@
     removeImage:{ar:'حذف الصورة', en:'Remove image'},
     addImage:{ar:'إضافة صورة', en:'Add image'},
     maxImages:{ar:'الحد الأقصى 5 صور', en:'Maximum 5 images'},
+    accDeleteTitle:{ar:'حذف الحساب', en:'Delete account'},
+    accDeleteWarn:{ar:'سيتم حذف حسابك وخدماتك ومعرض أعمالك نهائياً، ولا يمكن التراجع عن هذا الإجراء. الطلبات السابقة تبقى في سجل الطرف الآخر.', en:'Your account, services and portfolio will be permanently deleted and cannot be restored. Past orders stay in the other party\'s record.'},
+    accDeleteBtn:{ar:'حذف حسابي نهائياً', en:'Delete my account permanently'},
+    accDeleted:{ar:'تم حذف حسابك', en:'Your account was deleted'},
     accTitle:{ar:'حسابي', en:'My account'},
     accPersonal:{ar:'المعلومات الشخصية', en:'Personal information'},
     accPrivacy:{ar:'الخصوصية والأمن', en:'Privacy & security'},
@@ -400,7 +404,7 @@
   let resetStage='email';
   let rsEmail='', rsNewPassword='', rsConfirmPassword='';
   let resetToken='';
-  let piState=null, cpState=null;
+  let piState=null, cpState=null, daState=null;
   let sfName='', sfCategory=CATEGORIES[0].id, sfPrice='', sfDesc='', sfImages=[];
 
   const root = document.getElementById('root');
@@ -1204,6 +1208,9 @@
       <div class="content">
         ${accPageHead('go-account', tr('accPrivacy'))}
         ${accRow('🔑', tr('accChangePwd'), 'go-change-password')}
+        <div data-action="go-delete-account" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--danger);border-radius:var(--radius);margin-top:18px;cursor:pointer;color:var(--danger);font-weight:600;">
+          <span style="font-size:20px;">🗑️</span><span style="flex:1;">${tr('accDeleteTitle')}</span>
+        </div>
       </div>`;
   }
   function renderChangePassword(){
@@ -1216,6 +1223,17 @@
         <div class="field"><label>${tr('accNewPwd')}</label><input type="password" id="cp-new" value="${escapeHtml(s.nw)}" dir="ltr"></div>
         <div class="field"><label>${tr('accConfirmPwd')}</label><input type="password" id="cp-conf" value="${escapeHtml(s.conf)}" dir="ltr"></div>
         <button class="btn btn-primary" data-action="submit-change-password">${tr('accSave')}</button>
+      </div>`;
+  }
+  function renderDeleteAccount(){
+    const s = daState || {pw:''};
+    return `
+      ${renderHeader('account')}
+      <div class="content">
+        ${accPageHead('go-privacy', tr('accDeleteTitle'))}
+        <div style="border:1px solid var(--danger);border-radius:var(--radius);padding:14px;color:var(--danger);line-height:1.8;margin-bottom:16px;">${tr('accDeleteWarn')}</div>
+        <div class="field"><label>${tr('accCurPwd')}</label><input type="password" id="da-pw" value="${escapeHtml(s.pw)}" dir="ltr"></div>
+        <button class="btn" data-action="submit-delete-account" style="background:var(--danger);color:#fff;">${tr('accDeleteBtn')}</button>
       </div>`;
   }
   function renderAppSettings(){
@@ -1241,6 +1259,7 @@
     bind('cp-cur', cpState, 'cur');
     bind('cp-new', cpState, 'nw');
     bind('cp-conf', cpState, 'conf');
+    bind('da-pw', daState, 'pw');
   }
   async function savePersonal(){
     const name = (piState.name || '').trim();
@@ -1273,6 +1292,26 @@
     cpState = null;
     showToast(tr('accPwdChanged'));
     view = 'privacy'; render();
+  }
+
+  async function deleteAccount(){
+    const pw = (daState && daState.pw) || '';
+    if(!pw){ showToast(tr('shortPassword')); return; }
+    let res;
+    try{
+      const oldHash = await hashPassword(profile.email, pw);
+      res = await api({action:'delete', table:'users', id:profile.id, oldPasswordHash:oldHash});
+    }catch(e){ showToast(tr('networkError')); return; }
+    if(!res || !res.ok){ showToast(res && res.error === 'WRONG_PASSWORD' ? tr('accWrongPwd') : tr('networkError')); return; }
+    // The account row is gone; the session is still valid for removing the user's own content.
+    try{
+      services = services.filter(x=>x.ownerId!==profile.id);
+      await syncTable('services', services);
+      await syncTable('portfolio', allPortfolioItems().filter(p=>p.userId!==profile.id));
+    }catch(e){}
+    daState = null;
+    logout();
+    showToast(tr('accDeleted'));
   }
 
   function renderPortfolio(){
@@ -1532,6 +1571,7 @@
     else if(view==='privacy'){ html = renderPrivacy(); }
     else if(view==='change-password'){ html = renderChangePassword(); }
     else if(view==='app-settings'){ html = renderAppSettings(); }
+    else if(view==='delete-account'){ html = renderDeleteAccount(); }
     if(toastMsg){ html += `<div class="toast">${escapeHtml(toastMsg)}</div>`; }
     root.innerHTML = html;
     attachDynamicListeners();
@@ -1637,6 +1677,8 @@
     else if(action==='pi-remove-avatar'){ piState.avatar=''; render(); }
     else if(action==='save-personal'){ await savePersonal(); }
     else if(action==='submit-change-password'){ await submitChangePassword(); }
+    else if(action==='go-delete-account'){ daState={pw:''}; view='delete-account'; render(); }
+    else if(action==='submit-delete-account'){ await deleteAccount(); }
     else if(action==='pick-role'){ authRole = t.getAttribute('data-role'); render(); }
     else if(action==='login-submit'){
       const email = authEmail.trim();
