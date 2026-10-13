@@ -178,7 +178,8 @@
     removeImage:{ar:'حذف الصورة', en:'Remove image'},
     addImage:{ar:'إضافة صورة', en:'Add image'},
     maxImages:{ar:'الحد الأقصى 5 صور', en:'Maximum 5 images'},
-    pmTypeBank:{ar:'حساب بنكي', en:'Bank account'},
+    pmTypeBank:{ar:'بنكك', en:'Bankak'},
+    pmTypeSahil:{ar:'بنك ساهل', en:'Sahil Bank'},
     pmTypeFawry:{ar:'فوري', en:'Fawry'},
     pmTypeBravo:{ar:'برافو', en:'Bravo'},
     pmTypeOther:{ar:'طريقة أخرى', en:'Other method'},
@@ -404,8 +405,8 @@
   let paymentRefDrafts = {};
   let pmInfoDraft = '';
   let pmDraft = [];
-  const PM_TYPES = ['bank','fawry','bravo','other'];
-  const PM_LABEL_KEYS = {bank:'pmTypeBank', fawry:'pmTypeFawry', bravo:'pmTypeBravo', other:'pmTypeOther'};
+  const PM_TYPES = ['bank','sahil','fawry','bravo','other'];
+  const PM_LABEL_KEYS = {bank:'pmTypeBank', sahil:'pmTypeSahil', fawry:'pmTypeFawry', bravo:'pmTypeBravo', other:'pmTypeOther'};
   let reportTargetType = null;
   let reportTargetId = null;
   let reportTargetName = null;
