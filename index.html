@@ -178,6 +178,15 @@
     removeImage:{ar:'حذف الصورة', en:'Remove image'},
     addImage:{ar:'إضافة صورة', en:'Add image'},
     maxImages:{ar:'الحد الأقصى 5 صور', en:'Maximum 5 images'},
+    pmTypeBank:{ar:'حساب بنكي', en:'Bank account'},
+    pmTypeFawry:{ar:'فوري', en:'Fawry'},
+    pmTypeBravo:{ar:'برافو', en:'Bravo'},
+    pmTypeOther:{ar:'طريقة أخرى', en:'Other method'},
+    pmAddMethod:{ar:'إضافة طريقة دفع', en:'Add payment method'},
+    pmHolderName:{ar:'اسم صاحب الحساب', en:'Account holder name'},
+    pmNumber:{ar:'رقم الحساب أو الهاتف أو IBAN', en:'Account number, phone or IBAN'},
+    pmRemove:{ar:'حذف', en:'Remove'},
+    pmMax:{ar:'الحد الأقصى 5 طرق دفع', en:'Maximum 5 payment methods'},
     accDeleteTitle:{ar:'حذف الحساب', en:'Delete account'},
     accDeleteWarn:{ar:'سيتم حذف حسابك وخدماتك ومعرض أعمالك نهائياً، ولا يمكن التراجع عن هذا الإجراء. الطلبات السابقة تبقى في سجل الطرف الآخر.', en:'Your account, services and portfolio will be permanently deleted and cannot be restored. Past orders stay in the other party\'s record.'},
     accDeleteBtn:{ar:'حذف حسابي نهائياً', en:'Delete my account permanently'},
@@ -394,6 +403,9 @@
   let chatText = '';
   let paymentRefDrafts = {};
   let pmInfoDraft = '';
+  let pmDraft = [];
+  const PM_TYPES = ['bank','fawry','bravo','other'];
+  const PM_LABEL_KEYS = {bank:'pmTypeBank', fawry:'pmTypeFawry', bravo:'pmTypeBravo', other:'pmTypeOther'};
   let reportTargetType = null;
   let reportTargetId = null;
   let reportTargetName = null;
@@ -963,8 +975,21 @@
       <div class="content">
         <div class="field" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;">
           <label>${tr('paymentInfoLabel')}</label>
-          <input type="text" id="pm-info" value="${escapeHtml(pmInfoDraft)}" placeholder="${tr('paymentInfoPlaceholder')}" dir="auto">
-          <button type="button" class="btn btn-secondary" data-action="save-payment-info" style="margin-top:8px;">${tr('savePaymentInfo')}</button>
+          ${pmDraft.map((m,i)=>`
+            <div style="border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:10px;background:var(--bg);">
+              <div style="display:flex;gap:8px;align-items:center;">
+                <select data-pm-idx="${i}" data-pm-key="type" style="flex:1;padding:8px;border-radius:6px;border:1px solid var(--border);">
+                  ${PM_TYPES.map(t=>`<option value="${t}" ${m.type===t?'selected':''}>${tr(PM_LABEL_KEYS[t])}</option>`).join('')}
+                </select>
+                <button type="button" class="link-btn" data-action="pm-remove" data-idx="${i}">${tr('pmRemove')}</button>
+              </div>
+              <input type="text" data-pm-idx="${i}" data-pm-key="name" value="${escapeHtml(m.name)}" placeholder="${tr('pmHolderName')}" dir="auto" style="margin-top:8px;">
+              <input type="text" data-pm-idx="${i}" data-pm-key="number" value="${escapeHtml(m.number)}" placeholder="${tr('pmNumber')}" dir="ltr" style="margin-top:8px;">
+            </div>`).join('')}
+          ${pmDraft.length < 5
+            ? `<button type="button" class="btn btn-secondary" data-action="pm-add" style="margin-top:10px;">${tr('pmAddMethod')}</button>`
+            : `<div style="font-size:12px;color:var(--muted);margin-top:8px;">${tr('pmMax')}</div>`}
+          <button type="button" class="btn btn-secondary" data-action="save-payment-info" style="margin-top:10px;">${tr('savePaymentInfo')}</button>
         </div>
         <button class="btn btn-primary" data-action="add-service-form" style="margin-bottom:16px;">${tr('addServiceBtn')}</button>
         ${listHtml}
@@ -1017,7 +1042,7 @@
 
     function orderRow(o, isProvider){
       const provider = users.find(u=>u.id===o.providerId);
-      const paymentInfo = provider ? provider.paymentInfo : '';
+      const pmList = provider ? parsePaymentMethods(provider.paymentInfo) : [];
       let paymentHtml = '';
       if(o.paymentStatus==='confirmed'){
         paymentHtml = `<div class="status-badge status-done" style="display:inline-block;margin-top:6px;">✅ ${tr('paymentConfirmedLabel')}</div>`;
@@ -1037,8 +1062,8 @@
           paymentHtml = `
             <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:8px;">
               <div style="font-size:12px;font-weight:700;margin-bottom:4px;">${tr('paymentInstructionsTitle')}</div>
-              <div style="font-size:12.5px;color:var(--muted);margin-bottom:8px;" dir="auto">${paymentInfo ? escapeHtml(paymentInfo) : tr('noPaymentInfoSet')}</div>
-              ${paymentInfo ? `
+              <div style="font-size:12.5px;color:var(--muted);margin-bottom:8px;" dir="auto">${pmList.length ? pmList.map(m=>`<div style="margin-bottom:4px;"><b>${tr(PM_LABEL_KEYS[m.type])}:</b> ${escapeHtml([m.name, m.number].filter(Boolean).join(' - '))}</div>`).join('') : tr('noPaymentInfoSet')}</div>
+              ${pmList.length ? `
                 <input type="text" class="payment-ref-input" data-order-id="${o.id}" placeholder="${tr('transactionRefLabel')}" value="${escapeHtml(paymentRefDrafts[o.id]||'')}" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;margin-bottom:8px;background:var(--surface);color:var(--text);">
                 <button type="button" class="btn btn-secondary" data-action="submit-payment" data-id="${o.id}">${tr('iHavePaid')}</button>
               ` : ''}
@@ -1260,6 +1285,11 @@
     bind('cp-new', cpState, 'nw');
     bind('cp-conf', cpState, 'conf');
     bind('da-pw', daState, 'pw');
+    document.querySelectorAll('[data-pm-idx]').forEach(el=>{
+      const onEdit = ()=>{ const i = Number(el.getAttribute('data-pm-idx')); const k = el.getAttribute('data-pm-key'); if(pmDraft[i]) pmDraft[i][k] = el.value; };
+      el.addEventListener('input', onEdit);
+      el.addEventListener('change', onEdit);
+    });
   }
   async function savePersonal(){
     const name = (piState.name || '').trim();
@@ -1312,6 +1342,17 @@
     daState = null;
     logout();
     showToast(tr('accDeleted'));
+  }
+
+  function parsePaymentMethods(v){
+    if(!v) return [];
+    if(typeof v==='string' && v.charAt(0)==='['){
+      try{
+        const a = JSON.parse(v);
+        return Array.isArray(a) ? a.filter(x=>x && typeof x==='object').map(x=>({type: PM_TYPES.indexOf(x.type)>-1 ? x.type : 'other', name:String(x.name||''), number:String(x.number||'')})) : [];
+      }catch(e){ return []; }
+    }
+    return [{type:'other', name:'', number:String(v)}];
   }
 
   function renderPortfolio(){
@@ -1720,12 +1761,16 @@
       render();
     }
     else if(action==='go-home'){ view='home'; render(); }
-    else if(action==='go-myservices'){ pmInfoDraft = profile.paymentInfo || ''; view='myservices'; render(); }
+    else if(action==='go-myservices'){ pmDraft = parsePaymentMethods(profile.paymentInfo).slice(0,5); view='myservices'; render(); }
     else if(action==='go-myorders'){ view='myorders'; render(); }
     else if(action==='filter-cat'){ filterCategory = t.getAttribute('data-cat'); render(); }
     else if(action==='open-service'){ selectedServiceId = t.getAttribute('data-id'); view='service-detail'; render(); }
+    else if(action==='pm-add'){ if(pmDraft.length<5){ pmDraft.push({type:'bank', name:'', number:''}); render(); } }
+    else if(action==='pm-remove'){ pmDraft.splice(Number(t.getAttribute('data-idx')),1); render(); }
     else if(action==='save-payment-info'){
-      profile.paymentInfo = pmInfoDraft.trim();
+      const cleaned = pmDraft.map(m=>({type:m.type, name:(m.name||'').trim(), number:(m.number||'').trim()})).filter(m=>m.name||m.number);
+      profile.paymentInfo = cleaned.length ? JSON.stringify(cleaned) : '';
+      pmDraft = cleaned;
       await saveUsers();
       showToast(tr('savedSuccess'));
     }
