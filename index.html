@@ -202,6 +202,21 @@
   #root[data-anim="1"] .bottom-nav{animation:rise .4s ease both;}
   .bn-ico{transition:background .2s,transform .2s;}
   @media (prefers-reduced-motion: reduce){ #root *{animation:none !important;transition:none !important;} }
+  .auth-top{display:flex;justify-content:flex-end;padding:14px 16px 0;}
+  .lang-pill{border:1px solid var(--border);background:var(--surface);color:var(--primary);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .splash{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:linear-gradient(160deg,#146A5B 0%,#0B4038 100%);color:#F5EBD8;}
+  .splash-logo{width:130px;height:130px;animation:splashPop .7s cubic-bezier(.2,.8,.2,1) both;}
+  .splash-logo .ring{stroke-dasharray:260;stroke-dashoffset:260;animation:ringDraw 1.1s ease .2s forwards;}
+  .splash-logo .ring2{animation-delay:.4s;}
+  .splash-logo .dot{transform-box:fill-box;transform-origin:center;animation:dotPulse 1.2s ease 1s infinite alternate;}
+  .splash-name{font-size:34px;font-weight:800;margin-top:18px;opacity:0;animation:fadeUp .6s ease .9s forwards;}
+  .splash-tag{font-size:14px;margin-top:6px;color:#E0B25A;opacity:0;animation:fadeUp .6s ease 1.1s forwards;}
+  @keyframes splashPop{from{transform:scale(.7);opacity:0;}to{transform:scale(1);opacity:1;}}
+  @keyframes ringDraw{to{stroke-dashoffset:0;}}
+  @keyframes dotPulse{from{transform:scale(1);}to{transform:scale(1.3);}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+  @media (prefers-reduced-motion: reduce){ .splash *{animation:none !important;} .splash-name,.splash-tag{opacity:1;} .splash-logo .ring{stroke-dashoffset:0;} }
 </style>
 </head>
 <body>
@@ -837,7 +852,7 @@
 
   // ---------------- render pieces ----------------
   function bottomNavHtml(){
-    if(!profile) return '';
+    if(!profile || view==='splash') return '';
     const v = view;
     const active = v==='home' ? 'home'
       : v==='myservices' ? 'services'
@@ -912,6 +927,30 @@
     `;
   }
 
+  function renderSplash(){
+    return `
+      <div class="splash">
+        <svg class="splash-logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="ringGradS" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#E0B25A"/>
+              <stop offset="100%" stop-color="#C68A2E"/>
+            </linearGradient>
+          </defs>
+          <circle class="ring" cx="80" cy="100" r="40" fill="none" stroke="url(#ringGradS)" stroke-width="13"/>
+          <circle class="ring ring2" cx="120" cy="100" r="40" fill="none" stroke="url(#ringGradS)" stroke-width="13"/>
+          <circle class="dot" cx="100" cy="100" r="9" fill="#F5EBD8"/>
+        </svg>
+        <div class="splash-name">${lang==='ar' ? 'مهارة' : 'Mahara'}</div>
+        <div class="splash-tag">${lang==='ar' ? 'منصة مواهب السودان' : 'Sudan talent platform'}</div>
+      </div>`;
+  }
+  function startSplash(){
+    view = 'splash';
+    render();
+    setTimeout(()=>{ if(view==='splash'){ view = 'home'; render(); } }, 2400);
+  }
+
   function renderAuth(){
     if(authMode==='reset'){
       return `
@@ -936,6 +975,7 @@
     }
     const isSignup = authMode==='signup';
     return `
+      <div class="auth-top"><button type="button" class="lang-pill" data-action="toggle-lang">${lang==='ar' ? 'English' : 'العربية'}</button></div>
       <div class="auth-wrap">
         <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:64px;height:64px;display:block;margin:0 auto 12px;">
           <defs>
@@ -1710,6 +1750,7 @@
     let html = '';
     if(view==='loading'){ html = `<div class="empty" style="padding-top:100px;">...</div>`; }
     else if(view==='auth'){ html = renderAuth(); }
+    else if(view==='splash'){ html = renderSplash(); }
     else if(view==='home'){ html = renderHome(); }
     else if(view==='service-detail'){ html = renderServiceDetail(); }
     else if(view==='myservices'){ html = renderMyServices(); }
@@ -1854,8 +1895,7 @@
       authToken = res.token || ''; await saveSession(res.user.id, res.user.email, authToken);
       try{ await fetchAll(); lastFetch = Date.now(); }catch(e){}
       authEmail=''; authPassword='';
-      view = 'home';
-      render();
+      startSplash();
     }
     else if(action==='signup-submit'){
       const name = authName.trim();
@@ -1876,8 +1916,7 @@
       authToken = res.token || ''; await saveSession(res.user.id, res.user.email, authToken);
       try{ await fetchAll(); lastFetch = Date.now(); }catch(e){}
       authName='';authEmail='';authPassword='';authConfirmPassword='';authWhatsapp='';authRole='client';
-      view = 'home';
-      render();
+      startSplash();
     }
     else if(action==='go-home'){ view='home'; render(); }
     else if(action==='go-myservices'){ pmDraft = parsePaymentMethods(profile.paymentInfo).slice(0,5); view='myservices'; render(); }
