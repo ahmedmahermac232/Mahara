@@ -188,6 +188,20 @@
   .bn-item.active{color:var(--primary);}
   .bn-item.active .bn-ico{background:color-mix(in srgb, var(--primary) 14%, transparent);}
   .bn-item:active .bn-ico{transform:scale(.94);}
+  @keyframes pageIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+  @keyframes rise{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+  @keyframes pop{from{opacity:0;transform:scale(.96);}to{opacity:1;transform:none;}}
+  #root[data-anim="1"] .content{animation:pageIn .38s cubic-bezier(.2,.7,.2,1) both;}
+  #root[data-anim="1"] .service-row,#root[data-anim="1"] .my-service-row,#root[data-anim="1"] .order-row,#root[data-anim="1"] .acc-row{animation:rise .42s cubic-bezier(.2,.7,.2,1) both;}
+  #root[data-anim="1"] .service-row:nth-child(2),#root[data-anim="1"] .my-service-row:nth-child(2),#root[data-anim="1"] .order-row:nth-child(2),#root[data-anim="1"] .acc-row:nth-child(2){animation-delay:.05s;}
+  #root[data-anim="1"] .service-row:nth-child(3),#root[data-anim="1"] .my-service-row:nth-child(3),#root[data-anim="1"] .order-row:nth-child(3),#root[data-anim="1"] .acc-row:nth-child(3){animation-delay:.1s;}
+  #root[data-anim="1"] .service-row:nth-child(4),#root[data-anim="1"] .my-service-row:nth-child(4),#root[data-anim="1"] .order-row:nth-child(4),#root[data-anim="1"] .acc-row:nth-child(4){animation-delay:.15s;}
+  #root[data-anim="1"] .service-row:nth-child(5),#root[data-anim="1"] .my-service-row:nth-child(5),#root[data-anim="1"] .order-row:nth-child(5),#root[data-anim="1"] .acc-row:nth-child(5){animation-delay:.2s;}
+  #root[data-anim="1"] .service-row:nth-child(n+6),#root[data-anim="1"] .my-service-row:nth-child(n+6),#root[data-anim="1"] .order-row:nth-child(n+6),#root[data-anim="1"] .acc-row:nth-child(n+6){animation-delay:.25s;}
+  #root[data-anim="1"] .profile-hero{animation:pop .45s cubic-bezier(.2,.7,.2,1) both;}
+  #root[data-anim="1"] .bottom-nav{animation:rise .4s ease both;}
+  .bn-ico{transition:background .2s,transform .2s;}
+  @media (prefers-reduced-motion: reduce){ #root *{animation:none !important;transition:none !important;} }
 </style>
 </head>
 <body>
@@ -1718,6 +1732,7 @@
     else if(view==='delete-account'){ html = renderDeleteAccount(); }
     if(profile && view!=='auth'){ html += bottomNavHtml(); }
     if(toastMsg){ html += `<div class="toast">${escapeHtml(toastMsg)}</div>`; }
+    const _pageChanged = window.__mv !== view; window.__mv = view; root.dataset.anim = _pageChanged ? '1' : '0';
     root.innerHTML = html;
     attachDynamicListeners();
     attachAccountListeners();
