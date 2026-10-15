@@ -171,7 +171,7 @@
     serviceNameLabel:{ar:'اسم الخدمة', en:'Service name'},
     categoryLabel:{ar:'التصنيف', en:'Category'},
     priceLabel:{ar:'السعر (ج.س)', en:'Price (SDG)'},
-    descLabel:{ar:'وصف الخدمة (50 كلمة على الأقل)', en:'Service description (at least 50 words)'},
+    descLabel:{ar:'وصف الخدمة (20 كلمة على الأقل)', en:'Service description (at least 20 words)'},
     imageLabel:{ar:'صور للخدمة (اختياري، حتى 5 صور)', en:'Service images (optional, up to 5)'},
     chooseImage:{ar:'اختيار صورة', en:'Choose image'},
     changeImage:{ar:'تغيير الصورة', en:'Change image'},
@@ -240,7 +240,7 @@
     fillName:{ar:'يرجى إدخال اسمك أولاً', en:'Please enter your name first'},
     fillServiceName:{ar:'يرجى إدخال اسم الخدمة', en:'Enter the service name'},
     fillDesc:{ar:'يرجى إدخال وصف للخدمة', en:'Enter a service description'},
-    descTooShort:{ar:'يجب ألا يقل الوصف عن 50 كلمة', en:'Description must be at least 50 words'},
+    descTooShort:{ar:'يجب ألا يقل الوصف عن 20 كلمة', en:'Description must be at least 20 words'},
     fillPrice:{ar:'يرجى إدخال سعر صحيح', en:'Enter a valid price'},
     invalidEmail:{ar:'يرجى إدخال بريد إلكتروني صحيح', en:'Enter a valid email address'},
     shortPassword:{ar:'يجب ألا تقل كلمة المرور عن 6 أحرف', en:'Password must be at least 6 characters'},
@@ -428,7 +428,7 @@
     const n = Number(p).toLocaleString('en-US');
     return lang==='ar' ? n + ' ج.س' : n + ' SDG';
   }
-  const MIN_DESC_WORDS = 50;
+  const MIN_DESC_WORDS = 20;
   const MAX_IMAGES = 5;
   function parseImages(v){
     if(!v) return [];
