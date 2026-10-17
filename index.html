@@ -217,6 +217,40 @@
   @keyframes dotPulse{from{transform:scale(1);}to{transform:scale(1.3);}}
   @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
   @media (prefers-reduced-motion: reduce){ .splash *{animation:none !important;} .splash-name,.splash-tag{opacity:1;} .splash-logo .ring{stroke-dashoffset:0;} }
+  .skel{background:linear-gradient(90deg,var(--border) 25%,var(--bg) 50%,var(--border) 75%);background-size:200% 100%;animation:shimmer 1.3s linear infinite;border-radius:8px;}
+  .skel-card{display:flex;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:12px;margin-bottom:12px;}
+  @keyframes shimmer{from{background-position:200% 0;}to{background-position:-200% 0;}}
+
+  .success-pop{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.18);z-index:200;animation:fadeIn .2s ease;transition:opacity .3s;}
+  .success-pop.out{opacity:0;}
+  .success-card{background:var(--surface);color:var(--text);border-radius:20px;padding:22px 28px;display:flex;flex-direction:column;align-items:center;gap:10px;font-weight:700;box-shadow:0 20px 40px -20px rgba(0,0,0,.4);}
+  .check{width:64px;height:64px;}
+  .check-circle{fill:none;stroke:var(--primary);stroke-width:3;stroke-dasharray:152;stroke-dashoffset:152;animation:strokeIn .6s ease forwards;}
+  .check-mark{fill:none;stroke:var(--primary);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:40;stroke-dashoffset:40;animation:strokeIn .4s ease .5s forwards;}
+  @keyframes strokeIn{to{stroke-dashoffset:0;}}
+  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+  .op-track{display:flex;align-items:flex-start;margin:12px 0 8px;}
+  .op-step{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:64px;}
+  .op-dot{width:24px;height:24px;border-radius:50%;background:var(--border);color:var(--muted);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:background .4s,color .4s;}
+  .op-step.on .op-dot{background:var(--primary);color:#fff;}
+  .op-label{font-size:11px;color:var(--muted);text-align:center;white-space:nowrap;}
+  .op-step.on .op-label{color:var(--text);font-weight:600;}
+  .op-line{flex:1;height:3px;background:var(--border);margin:11px 4px 0;border-radius:3px;overflow:hidden;}
+  .op-line span{display:block;height:100%;width:0;background:var(--primary);}
+  .op-line.on span{width:100%;}
+  #root[data-anim="1"] .op-line.on span{animation:lineFill .6s ease both;}
+  @keyframes lineFill{from{width:0;}to{width:100%;}}
+
+  #root[data-anim="1"] img{animation:imgIn .5s ease both;}
+  @keyframes imgIn{from{opacity:0;}to{opacity:1;}}
+
+  .ptr{position:fixed;top:10px;left:50%;transform:translate(-50%,-48px);width:40px;height:40px;border-radius:50%;background:var(--surface);color:var(--primary);
+    display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px -10px rgba(0,0,0,.4);z-index:150;opacity:0;pointer-events:none;transition:transform .25s,opacity .25s;}
+  .ptr svg{width:20px;height:20px;}
+  .ptr.spin svg{animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @media (prefers-reduced-motion: reduce){ .check-circle,.check-mark{stroke-dashoffset:0;} .op-line.on span{width:100%;} }
 </style>
 </head>
 <body>
@@ -802,6 +836,7 @@
     authToken = sess.token || '';
     profile = (sess.userId && authToken) ? {id:sess.userId, email:sess.email||''} : null;
     if(!profile){ view = 'auth'; render(); return; }
+    view = 'loading'; render();
     try{
       await fetchAll();
       lastFetch = Date.now();
@@ -852,7 +887,7 @@
 
   // ---------------- render pieces ----------------
   function bottomNavHtml(){
-    if(!profile || view==='splash') return '';
+    if(!profile || view==='splash' || view==='loading') return '';
     const v = view;
     const active = v==='home' ? 'home'
       : v==='myservices' ? 'services'
@@ -926,6 +961,57 @@
       </div>
     `;
   }
+
+  function renderLoading(){
+    const card = `<div class="skel-card"><div class="skel" style="width:64px;height:64px;border-radius:12px;flex-shrink:0;"></div><div style="flex:1;display:flex;flex-direction:column;gap:8px;"><div class="skel" style="height:14px;width:70%;"></div><div class="skel" style="height:11px;width:45%;"></div><div class="skel" style="height:11px;width:90%;"></div></div></div>`;
+    return `
+      <div class="header" style="padding-bottom:12px;"><div class="skel" style="height:26px;width:120px;"></div></div>
+      <div class="content">${card}${card}${card}</div>`;
+  }
+  function showSuccess(msg){
+    const el = document.createElement('div');
+    el.className = 'success-pop';
+    el.innerHTML = `<div class="success-card"><svg class="check" viewBox="0 0 52 52"><circle class="check-circle" cx="26" cy="26" r="24"/><path class="check-mark" d="M15 27l8 8 14-15"/></svg><div>${escapeHtml(msg)}</div></div>`;
+    document.body.appendChild(el);
+    setTimeout(()=>{ el.classList.add('out'); setTimeout(()=>el.remove(), 300); }, 1300);
+  }
+  function orderProgressHtml(status){
+    const steps = ['pending','in_progress','done'];
+    const idx = Math.max(0, steps.indexOf(status));
+    return `<div class="op-track">${steps.map((k,i)=>`
+      <div class="op-step ${i<=idx?'on':''}">
+        <span class="op-dot">${i<idx ? '✓' : (i+1)}</span>
+        <span class="op-label">${tr(STATUS_LABELS[k])}</span>
+      </div>${i<steps.length-1 ? `<div class="op-line ${i<idx?'on':''}"><span></span></div>` : ''}`).join('')}</div>`;
+  }
+  function initPullToRefresh(){
+    let startY = null, dist = 0;
+    const ptr = document.createElement('div');
+    ptr.className = 'ptr';
+    ptr.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>`;
+    document.body.appendChild(ptr);
+    const canStart = ()=> window.scrollY===0 && !!profile && ['home','myservices','portfolio','myorders','notifications','account'].indexOf(view)>-1;
+    document.addEventListener('touchstart', e=>{ startY = canStart() ? e.touches[0].clientY : null; dist = 0; }, {passive:true});
+    document.addEventListener('touchmove', e=>{
+      if(startY===null) return;
+      dist = Math.max(0, e.touches[0].clientY - startY);
+      ptr.style.transform = `translate(-50%, ${Math.min(dist,110)*0.5 - 40}px)`;
+      ptr.style.opacity = Math.min(1, dist/70);
+    }, {passive:true});
+    document.addEventListener('touchend', async ()=>{
+      if(startY===null) return;
+      const d = dist; startY = null;
+      if(d>70){
+        ptr.classList.add('spin');
+        ptr.style.transform = 'translate(-50%, 10px)';
+        await refreshData();
+        ptr.classList.remove('spin');
+      }
+      ptr.style.opacity = 0;
+      ptr.style.transform = 'translate(-50%, -48px)';
+    }, {passive:true});
+  }
+  if(document.body) initPullToRefresh(); else document.addEventListener('DOMContentLoaded', initPullToRefresh);
 
   function renderSplash(){
     return `
@@ -1233,6 +1319,7 @@
             <span class="order-service">${escapeHtml(o.serviceName)}</span>
             <span class="status-badge status-${o.status}">${tr(STATUS_LABELS[o.status])}</span>
           </div>
+          ${orderProgressHtml(o.status)}
           <div class="order-sub">${isProvider ? tr('clientWord')+': '+escapeHtml(o.clientName) : tr('providerWord')+': '+escapeHtml(o.providerName)} · ${formatPrice(o.price)}</div>
           ${paymentHtml}
           <button type="button" class="btn btn-ghost" data-action="open-chat" data-id="${o.id}" style="margin:8px 0;">💬 ${tr('openChat')}</button>
@@ -1462,7 +1549,7 @@
     });
     await saveUsers();
     piState = null;
-    showToast(tr('accSaved'));
+    showSuccess(tr('accSaved'));
     view = 'account'; render();
   }
   async function submitChangePassword(){
@@ -1477,7 +1564,7 @@
     }catch(e){ showToast(tr('networkError')); return; }
     if(!res || !res.ok){ showToast(res && res.error === 'WRONG_PASSWORD' ? tr('accWrongPwd') : tr('networkError')); return; }
     cpState = null;
-    showToast(tr('accPwdChanged'));
+    showSuccess(tr('accPwdChanged'));
     view = 'privacy'; render();
   }
 
@@ -1751,6 +1838,7 @@
     if(view==='loading'){ html = `<div class="empty" style="padding-top:100px;">...</div>`; }
     else if(view==='auth'){ html = renderAuth(); }
     else if(view==='splash'){ html = renderSplash(); }
+    else if(view==='loading'){ html = renderLoading(); }
     else if(view==='home'){ html = renderHome(); }
     else if(view==='service-detail'){ html = renderServiceDetail(); }
     else if(view==='myservices'){ html = renderMyServices(); }
@@ -1930,7 +2018,7 @@
       profile.paymentInfo = cleaned.length ? JSON.stringify(cleaned) : '';
       pmDraft = cleaned;
       await saveUsers();
-      showToast(tr('savedSuccess'));
+      showSuccess(tr('savedSuccess'));
     }
     else if(action==='add-service-form'){
       editingServiceId=null; sfName=''; sfCategory=CATEGORIES[0].id; sfPrice=''; sfDesc=''; sfImages=[];
@@ -1973,7 +2061,7 @@
       sfName='';sfCategory=CATEGORIES[0].id;sfPrice='';sfDesc='';sfImages=[];
       view = 'myservices';
       render();
-      showToast(tr('savedSuccess'));
+      showSuccess(tr('savedSuccess'));
     }
     else if(action==='place-order'){
       const s = services.find(x=>x.id===t.getAttribute('data-id'));
@@ -2026,7 +2114,7 @@
       editingPortfolioId=null; pfTitle='';pfDesc='';pfLink='';pfImages=[];
       view='portfolio';
       render();
-      showToast(tr('savedSuccess'));
+      showSuccess(tr('savedSuccess'));
     }
     else if(action==='open-profile'){
       viewingProviderId = t.getAttribute('data-id');
