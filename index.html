@@ -300,6 +300,11 @@
     removeImage:{ar:'حذف الصورة', en:'Remove image'},
     addImage:{ar:'إضافة صورة', en:'Add image'},
     maxImages:{ar:'الحد الأقصى 5 صور', en:'Maximum 5 images'},
+    deliveryTitle:{ar:'التسليم', en:'Delivery'},
+    deliveryPlaceholder:{ar:'اكتب ملاحظة التسليم، وأضف رابط الملفات (Drive أو غيره)', en:'Write a delivery note and add a link to the files (Drive or similar)'},
+    sendDelivery:{ar:'إرسال التسليم للعميل', en:'Send delivery to client'},
+    deliverySent:{ar:'تم إرسال التسليم للعميل', en:'Delivery sent to client'},
+    deliveryEmpty:{ar:'اكتب ملاحظة التسليم أولاً', en:'Write the delivery note first'},
     pmTypeBank:{ar:'بنكك', en:'Bankak'},
     pmTypeSahil:{ar:'بنك ساهل', en:'Sahil Bank'},
     pmTypeFawry:{ar:'فوري', en:'Fawry'},
@@ -675,6 +680,9 @@
   function notifText(n){
     if(n.type==='new_order'){
       return lang==='ar' ? `طلب جديد على خدمة "${n.data.serviceName}"` : `New order on "${n.data.serviceName}"`;
+    }
+    if(n.type==='delivery_sent'){
+      return lang==='ar' ? `تم تسليم العمل على "${n.data.serviceName}"` : `Work delivered for "${n.data.serviceName}"`;
     }
     if(n.type==='status_changed'){
       const st = tr(STATUS_LABELS[n.data.status]);
@@ -1313,6 +1321,16 @@
           `;
         }
       }
+      const deliveryHtml = isProvider ? `
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:8px;">
+          <div style="font-size:12px;font-weight:700;margin-bottom:6px;">${tr('deliveryTitle')}</div>
+          <textarea data-delivery-id="${o.id}" rows="3" dir="auto" placeholder="${tr('deliveryPlaceholder')}" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;background:var(--surface);color:var(--text);">${escapeHtml(o.delivery||'')}</textarea>
+          <button type="button" class="btn btn-secondary" data-action="send-delivery" data-id="${o.id}" style="margin-top:6px;">${tr('sendDelivery')}</button>
+        </div>` : (o.delivery ? `
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:8px;">
+          <div style="font-size:12px;font-weight:700;margin-bottom:4px;">${tr('deliveryTitle')}</div>
+          <div style="font-size:13px;white-space:pre-wrap;" dir="auto">${linkifyEsc(o.delivery)}</div>
+        </div>` : '');
       return `
         <div class="order-row">
           <div class="order-top">
@@ -1333,6 +1351,7 @@
           ` : (o.status==='done' && !hasReview(o.id) ? `
             <button type="button" class="btn btn-secondary" data-action="open-review" data-id="${o.id}" style="margin-top:6px;">${tr('rateService')}</button>
           ` : '')}
+          ${deliveryHtml}
         </div>
       `;
     }
@@ -1588,6 +1607,9 @@
     showToast(tr('accDeleted'));
   }
 
+  function linkifyEsc(text){
+    return escapeHtml(text).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener" style="color:var(--primary);word-break:break-all;">$1</a>');
+  }
   function parsePaymentMethods(v){
     if(!v) return [];
     if(typeof v==='string' && v.charAt(0)==='['){
@@ -2120,6 +2142,21 @@
       viewingProviderId = t.getAttribute('data-id');
       view='provider-profile';
       render();
+    }
+    else if(action==='send-delivery'){
+      const orderId = t.getAttribute('data-id');
+      const el = document.querySelector(`[data-delivery-id="${orderId}"]`);
+      const text = (el ? el.value : '').trim();
+      if(!text){ showToast(tr('deliveryEmpty')); return; }
+      const idx = orders.findIndex(o=>o.id===orderId);
+      if(idx>-1){
+        orders[idx].delivery = text;
+        notifications.push({id:uid(), userId:orders[idx].clientId, type:'delivery_sent', data:{serviceName:orders[idx].serviceName}, read:false, createdAt:Date.now()});
+        await saveOrders();
+        await saveNotifications();
+        showSuccess(tr('deliverySent'));
+        render();
+      }
     }
     else if(action==='submit-payment'){
       const orderId = t.getAttribute('data-id');
