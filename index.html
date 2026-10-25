@@ -305,6 +305,11 @@
     sendDelivery:{ar:'إرسال التسليم للعميل', en:'Send delivery to client'},
     deliverySent:{ar:'تم إرسال التسليم للعميل', en:'Delivery sent to client'},
     deliveryEmpty:{ar:'اكتب ملاحظة التسليم أولاً', en:'Write the delivery note first'},
+    addDeliveryFiles:{ar:'إضافة ملفات', en:'Add files'},
+    downloadFile:{ar:'تحميل', en:'Download'},
+    deliveryMaxFiles:{ar:'الحد الأقصى 5 ملفات للتسليم', en:'Maximum 5 delivery files'},
+    deliveryFileTooBig:{ar:'الملف أكبر من 20 ميجا', en:'File is larger than 20 MB'},
+    deliveryFilesSaved:{ar:'تم رفع الملفات للعميل', en:'Files uploaded for the client'},
     pmTypeBank:{ar:'بنكك', en:'Bankak'},
     pmTypeSahil:{ar:'بنك ساهل', en:'Sahil Bank'},
     pmTypeFawry:{ar:'فوري', en:'Fawry'},
@@ -1321,15 +1326,26 @@
           `;
         }
       }
+      const dFiles = parseDeliveryFiles(o.deliveryFiles);
+      const filesList = dFiles.map((f,i)=>`
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-top:6px;font-size:13px;">
+          <span style="flex:1;word-break:break-all;">📄 ${escapeHtml(f.name)}</span>
+          ${isProvider
+            ? `<button type="button" class="link-btn" data-action="del-delivery-file" data-id="${o.id}" data-idx="${i}">${tr('removeImage')}</button>`
+            : `<button type="button" class="link-btn" data-action="dl-delivery-file" data-path="${escapeHtml(f.path)}">${tr('downloadFile')}</button>`}
+        </div>`).join('');
       const deliveryHtml = isProvider ? `
         <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:8px;">
           <div style="font-size:12px;font-weight:700;margin-bottom:6px;">${tr('deliveryTitle')}</div>
           <textarea data-delivery-id="${o.id}" rows="3" dir="auto" placeholder="${tr('deliveryPlaceholder')}" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;background:var(--surface);color:var(--text);">${escapeHtml(o.delivery||'')}</textarea>
-          <button type="button" class="btn btn-secondary" data-action="send-delivery" data-id="${o.id}" style="margin-top:6px;">${tr('sendDelivery')}</button>
-        </div>` : (o.delivery ? `
+          <label class="btn btn-secondary" style="width:auto;padding:8px 14px;margin-top:8px;cursor:pointer;display:inline-block;">${tr('addDeliveryFiles')}<input type="file" multiple data-delivery-file="${o.id}" style="display:none"></label>
+          ${filesList}
+          <button type="button" class="btn btn-secondary" data-action="send-delivery" data-id="${o.id}" style="margin-top:8px;">${tr('sendDelivery')}</button>
+        </div>` : ((o.delivery || dFiles.length) ? `
         <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:8px;">
           <div style="font-size:12px;font-weight:700;margin-bottom:4px;">${tr('deliveryTitle')}</div>
-          <div style="font-size:13px;white-space:pre-wrap;" dir="auto">${linkifyEsc(o.delivery)}</div>
+          ${o.delivery ? `<div style="font-size:13px;white-space:pre-wrap;" dir="auto">${linkifyEsc(o.delivery)}</div>` : ''}
+          ${filesList}
         </div>` : '');
       return `
         <div class="order-row">
@@ -1607,6 +1623,10 @@
     showToast(tr('accDeleted'));
   }
 
+  function parseDeliveryFiles(v){
+    if(!v) return [];
+    try{ const a = JSON.parse(v); return Array.isArray(a) ? a : []; }catch(e){ return []; }
+  }
   function linkifyEsc(text){
     return escapeHtml(text).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener" style="color:var(--primary);word-break:break-all;">$1</a>');
   }
@@ -1619,6 +1639,32 @@
       }catch(e){ return []; }
     }
     return [{type:'other', name:'', number:String(v)}];
+  }
+
+  async function uploadDeliveryFiles(orderId, files){
+    const idx = orders.findIndex(o=>o.id===orderId);
+    const picked = Array.from(files || []);
+    if(idx<0 || !picked.length) return;
+    const list = parseDeliveryFiles(orders[idx].deliveryFiles);
+    if(list.length + picked.length > 5){ showToast(tr('deliveryMaxFiles')); return; }
+    const before = list.length;
+    for(const f of picked){
+      if(f.size > 20*1024*1024){ showToast(tr('deliveryFileTooBig')); continue; }
+      try{
+        const up = await api({action:'deliveryUploadUrl', orderId, fileName: f.name});
+        if(!up || !up.ok) throw new Error(up && up.error || 'upload_url');
+        const put = await fetch(up.signedUrl, {method:'PUT', headers:{'content-type': f.type || 'application/octet-stream'}, body: f});
+        if(!put.ok) throw new Error('upload ' + put.status);
+        list.push({name: f.name, path: up.path, size: f.size});
+      }catch(e){ console.error(e); showToast(tr('networkError')); }
+    }
+    if(list.length === before) { render(); return; }
+    orders[idx].deliveryFiles = JSON.stringify(list);
+    notifications.push({id:uid(), userId:orders[idx].clientId, type:'delivery_sent', data:{serviceName:orders[idx].serviceName}, read:false, createdAt:Date.now()});
+    await saveOrders();
+    await saveNotifications();
+    showSuccess(tr('deliveryFilesSaved'));
+    render();
   }
 
   function renderPortfolio(){
@@ -2143,6 +2189,25 @@
       view='provider-profile';
       render();
     }
+    else if(action==='del-delivery-file'){
+      const orderId = t.getAttribute('data-id');
+      const i = Number(t.getAttribute('data-idx'));
+      const idx = orders.findIndex(o=>o.id===orderId);
+      if(idx>-1){
+        const list = parseDeliveryFiles(orders[idx].deliveryFiles);
+        list.splice(i,1);
+        orders[idx].deliveryFiles = JSON.stringify(list);
+        await saveOrders();
+        render();
+      }
+    }
+    else if(action==='dl-delivery-file'){
+      try{
+        const r = await api({action:'deliveryDownloadUrl', path: t.getAttribute('data-path')});
+        if(r && r.ok) window.open(r.url, '_blank', 'noopener');
+        else showToast(tr('networkError'));
+      }catch(e){ showToast(tr('networkError')); }
+    }
     else if(action==='send-delivery'){
       const orderId = t.getAttribute('data-id');
       const el = document.querySelector(`[data-delivery-id="${orderId}"]`);
@@ -2275,6 +2340,8 @@
   });
 
   root.addEventListener('change', async (e)=>{
+    const dfIn = e.target.closest ? e.target.closest('[data-delivery-file]') : null;
+    if(dfIn){ await uploadDeliveryFiles(dfIn.getAttribute('data-delivery-file'), dfIn.files); return; }
     const t = e.target.closest('[data-action="update-status"]');
     if(!t) return;
     const id = t.getAttribute('data-id');
