@@ -310,6 +310,31 @@
     deliveryMaxFiles:{ar:'الحد الأقصى 5 ملفات للتسليم', en:'Maximum 5 delivery files'},
     deliveryFileTooBig:{ar:'الملف أكبر من 20 ميجا', en:'File is larger than 20 MB'},
     deliveryFilesSaved:{ar:'تم رفع الملفات للعميل', en:'Files uploaded for the client'},
+    statusAwaitingDeposit:{ar:'بانتظار العربون', en:'Awaiting deposit'},
+    statusAwaitingFinal:{ar:'بانتظار الدفع المتبقي', en:'Awaiting final payment'},
+    statusDelivered:{ar:'تم التسليم', en:'Delivered'},
+    stepApproval:{ar:'الموافقة', en:'Approval'},
+    stepInProgress:{ar:'التنفيذ', en:'In progress'},
+    stepFinal:{ar:'المتبقي', en:'Final'},
+    stepDelivered:{ar:'التسليم', en:'Delivery'},
+    stepDone:{ar:'الإنجاز', en:'Done'},
+    approveOrderBtn:{ar:'موافقة وتحديد العربون', en:'Approve and set deposit'},
+    clientApproveBtn:{ar:'أوافق على الطلب والمبلغ', en:'I agree to the order and amount'},
+    waitingClientApproval:{ar:'بانتظار موافقة العميل', en:'Waiting for client approval'},
+    waitingProviderApproval:{ar:'بانتظار موافقة المستقل', en:'Waiting for provider approval'},
+    depositSetLabel:{ar:'مبلغ العربون (يمكن تعديله)', en:'Deposit amount (editable)'},
+    depositDueLabel:{ar:'مبلغ العربون', en:'Deposit due'},
+    finalDueLabel:{ar:'المبلغ المتبقي', en:'Remaining amount'},
+    depositInvalid:{ar:'أدخل مبلغ عربون صحيح لا يتجاوز سعر الخدمة', en:'Enter a valid deposit not above the price'},
+    orderApprovedToast:{ar:'تمت الموافقة وتحديد العربون', en:'Approved and deposit set'},
+    requestFinalBtn:{ar:'أنهيت العمل، اطلب المبلغ المتبقي', en:'Work done, request remaining amount'},
+    finalRequestedToast:{ar:'تم طلب المبلغ المتبقي من العميل', en:'Remaining amount requested from client'},
+    waitingClientPayment:{ar:'بانتظار تحويل العميل', en:'Waiting for client payment'},
+    workInProgress:{ar:'العمل قيد التنفيذ', en:'Work in progress'},
+    clientConfirmBtn:{ar:'استلمت الطلب وتأكدت منه', en:'I received and verified the order'},
+    providerConfirmBtn:{ar:'تأكيد إكمال الطلب', en:'Confirm order completion'},
+    waitingOtherConfirm:{ar:'بانتظار تأكيد الطرف الآخر', en:'Waiting for the other party to confirm'},
+    orderCompletedLabel:{ar:'تم إنجاز الطلب', en:'Order completed'},
     pmTypeBank:{ar:'بنكك', en:'Bankak'},
     pmTypeSahil:{ar:'بنك ساهل', en:'Sahil Bank'},
     pmTypeFawry:{ar:'فوري', en:'Fawry'},
@@ -498,7 +523,7 @@
      ownerId:'seed4', ownerName:'منى الطيب', ownerWhatsapp:'249900000004'},
   ];
 
-  const STATUS_LABELS = {pending:'statusPending', in_progress:'statusInProgress', done:'statusDone'};
+  const STATUS_LABELS = {pending:'statusPending', awaiting_deposit:'statusAwaitingDeposit', in_progress:'statusInProgress', awaiting_final:'statusAwaitingFinal', delivered:'statusDelivered', done:'statusDone'};
   const REPORT_REASONS = [
     {id:'inappropriate', label:'reasonInappropriate'},
     {id:'fraud', label:'reasonFraud'},
@@ -787,7 +812,7 @@
     if(!d || !d.ok) throw new Error('bad response');
     users = d.users || [];
     services = (d.services || []).map(s=>{ const imgs = parseImages(s.image); return Object.assign({}, s, {images: imgs, image: imgs[0]||''}); });
-    orders = d.orders || [];
+    orders = (d.orders || []).map(o=>{ o.status = deriveStatus(o); return o; });
     reviews = d.reviews || [];
     notifications = d.notifications || [];
     messages = d.messages || [];
@@ -989,12 +1014,15 @@
     setTimeout(()=>{ el.classList.add('out'); setTimeout(()=>el.remove(), 300); }, 1300);
   }
   function orderProgressHtml(status){
-    const steps = ['pending','in_progress','done'];
-    const idx = Math.max(0, steps.indexOf(status));
-    return `<div class="op-track">${steps.map((k,i)=>`
+    const steps = [
+      {l:'stepApproval'}, {l:'stepInProgress'}, {l:'stepFinal'}, {l:'stepDelivered'}, {l:'stepDone'}
+    ];
+    const idxMap = {pending:0, awaiting_deposit:0, in_progress:1, awaiting_final:2, delivered:3, done:4};
+    const idx = idxMap[status] ?? 0;
+    return `<div class="op-track">${steps.map((s,i)=>`
       <div class="op-step ${i<=idx?'on':''}">
         <span class="op-dot">${i<idx ? '✓' : (i+1)}</span>
-        <span class="op-label">${tr(STATUS_LABELS[k])}</span>
+        <span class="op-label">${tr(s.l)}</span>
       </div>${i<steps.length-1 ? `<div class="op-line ${i<idx?'on':''}"><span></span></div>` : ''}`).join('')}</div>`;
   }
   function initPullToRefresh(){
@@ -1298,75 +1326,98 @@
     function orderRow(o, isProvider){
       const provider = users.find(u=>u.id===o.providerId);
       const pmList = provider ? parsePaymentMethods(provider.paymentInfo) : [];
-      let paymentHtml = '';
-      if(o.paymentStatus==='confirmed'){
-        paymentHtml = `<div class="status-badge status-done" style="display:inline-block;margin-top:6px;">✅ ${tr('paymentConfirmedLabel')}</div>`;
-      } else if(o.paymentStatus==='awaiting_confirmation'){
-        if(isProvider){
-          paymentHtml = `
-            <div class="order-sub" style="margin-top:6px;">${tr('referenceWord')}: ${escapeHtml(o.paymentReference)}</div>
-            <button type="button" class="btn btn-secondary" data-action="confirm-payment" data-id="${o.id}">${tr('confirmReceiptBtn')}</button>
-          `;
-        } else {
-          paymentHtml = `<div class="order-sub" style="margin-top:6px;">⏳ ${tr('paymentAwaitingConfirm')}</div>`;
-        }
-      } else {
-        if(isProvider){
-          paymentHtml = `<div class="order-sub" style="margin-top:6px;">${tr('notPaidYet')}</div>`;
-        } else {
-          paymentHtml = `
-            <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:8px;">
-              <div style="font-size:12px;font-weight:700;margin-bottom:4px;">${tr('paymentInstructionsTitle')}</div>
-              <div style="font-size:12.5px;color:var(--muted);margin-bottom:8px;" dir="auto">${pmList.length ? pmList.map(m=>`<div style="margin-bottom:4px;"><b>${tr(PM_LABEL_KEYS[m.type])}:</b> ${escapeHtml([m.name, m.number].filter(Boolean).join(' - '))}</div>`).join('') : tr('noPaymentInfoSet')}</div>
-              ${pmList.length ? `
-                <input type="text" class="payment-ref-input" data-order-id="${o.id}" placeholder="${tr('transactionRefLabel')}" value="${escapeHtml(paymentRefDrafts[o.id]||'')}" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;margin-bottom:8px;background:var(--surface);color:var(--text);">
-                <button type="button" class="btn btn-secondary" data-action="submit-payment" data-id="${o.id}">${tr('iHavePaid')}</button>
-              ` : ''}
-            </div>
-          `;
-        }
-      }
+      const st = deriveStatus(o);
+      const price = Number(o.price) || 0;
+      const depositAmt = Number(o.deposit) > 0 ? Number(o.deposit) : Math.round(price/2);
+      const finalAmt = Math.max(0, price - depositAmt);
+      const isFinalStage = o.paymentStage === 'final';
+      const dueAmt = isFinalStage ? finalAmt : depositAmt;
       const dFiles = parseDeliveryFiles(o.deliveryFiles);
-      const filesList = dFiles.map((f,i)=>`
+
+      const payInstructions = `
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:8px;">
+          <div style="font-size:12px;font-weight:700;margin-bottom:4px;">${tr('paymentInstructionsTitle')}</div>
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:8px;" dir="auto">${pmList.length ? pmList.map(m=>`<div style="margin-bottom:4px;"><b>${tr(PM_LABEL_KEYS[m.type])}:</b> ${escapeHtml([m.name, m.number].filter(Boolean).join(' - '))}</div>`).join('') : tr('noPaymentInfoSet')}</div>
+          <div style="font-size:14px;font-weight:700;margin-bottom:8px;">${tr(isFinalStage ? 'finalDueLabel' : 'depositDueLabel')}: ${formatPrice(dueAmt)}</div>
+          ${pmList.length ? `
+            <input type="text" class="payment-ref-input" data-order-id="${o.id}" placeholder="${tr('transactionRefLabel')}" value="${escapeHtml(paymentRefDrafts[o.id]||'')}" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;background:var(--surface);color:var(--text);">
+            <button type="button" class="btn btn-secondary" data-action="submit-payment" data-id="${o.id}" style="margin-top:6px;">${tr('iHavePaid')}</button>` : ''}
+        </div>`;
+
+      let stageHtml = '';
+      if(st === 'pending'){
+        if(isProvider){
+          stageHtml = o.providerApproved
+            ? `<div class="order-sub" style="margin-top:8px;">${tr('waitingClientApproval')}</div>`
+            : `<div class="order-sub" style="margin-top:8px;">${tr('depositSetLabel')}</div>
+               <input type="number" min="1" data-deposit-id="${o.id}" value="${depositAmt}" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border);margin-top:4px;font-family:inherit;background:var(--surface);color:var(--text);">
+               <button type="button" class="btn btn-secondary" data-action="approve-order" data-id="${o.id}" style="margin-top:6px;">${tr('approveOrderBtn')}</button>`;
+        } else {
+          stageHtml = o.clientApproved
+            ? `<div class="order-sub" style="margin-top:8px;">${tr('waitingProviderApproval')}</div>`
+            : `<button type="button" class="btn btn-secondary" data-action="client-approve" data-id="${o.id}" style="margin-top:8px;">${tr('clientApproveBtn')}</button>`;
+        }
+      } else if(st === 'awaiting_deposit' || st === 'awaiting_final'){
+        if(o.paymentStatus === 'awaiting_confirmation'){
+          stageHtml = isProvider
+            ? `<div class="order-sub" style="margin-top:6px;">${tr('referenceWord')}: ${escapeHtml(o.paymentReference)}</div>
+               <button type="button" class="btn btn-secondary" data-action="confirm-payment" data-id="${o.id}">${tr('confirmReceiptBtn')}</button>`
+            : `<div class="order-sub" style="margin-top:6px;">⏳ ${tr('paymentAwaitingConfirm')}</div>`;
+        } else {
+          stageHtml = isProvider
+            ? `<div class="order-sub" style="margin-top:6px;">${tr('waitingClientPayment')}</div>`
+            : payInstructions;
+        }
+      } else if(st === 'in_progress'){
+        if(isProvider && !isFinalStage){
+          stageHtml = `<button type="button" class="btn btn-secondary" data-action="request-final" data-id="${o.id}" style="margin-top:8px;">${tr('requestFinalBtn')}</button>`;
+        } else {
+          stageHtml = `<div class="order-sub" style="margin-top:6px;">${tr('workInProgress')}</div>`;
+        }
+      } else if(st === 'delivered'){
+        const mineDone = isProvider ? o.providerConfirmed : o.clientConfirmed;
+        stageHtml = mineDone
+          ? `<div class="order-sub" style="margin-top:6px;">${tr('waitingOtherConfirm')}</div>`
+          : `<button type="button" class="btn btn-secondary" data-action="${isProvider ? 'provider-confirm' : 'client-confirm'}" data-id="${o.id}" style="margin-top:8px;">${tr(isProvider ? 'providerConfirmBtn' : 'clientConfirmBtn')}</button>`;
+      } else if(st === 'done'){
+        stageHtml = `<div class="status-badge status-done" style="display:inline-block;margin-top:6px;">✅ ${tr('orderCompletedLabel')}</div>`;
+      }
+
+      const fileButtons = (editable) => dFiles.map((f,i)=>`
         <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-top:6px;font-size:13px;">
           <span style="flex:1;word-break:break-all;">📄 ${escapeHtml(f.name)}</span>
-          ${isProvider
+          ${editable
             ? `<button type="button" class="link-btn" data-action="del-delivery-file" data-id="${o.id}" data-idx="${i}">${tr('removeImage')}</button>`
             : `<button type="button" class="link-btn" data-action="dl-delivery-file" data-path="${escapeHtml(f.path)}">${tr('downloadFile')}</button>`}
         </div>`).join('');
-      const deliveryHtml = isProvider ? `
+
+      const canDeliver = isProvider && (st === 'delivered' || (st === 'in_progress' && isFinalStage && o.paymentStatus === 'confirmed'));
+      const deliveryHtml = canDeliver ? `
         <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:8px;">
           <div style="font-size:12px;font-weight:700;margin-bottom:6px;">${tr('deliveryTitle')}</div>
           <textarea data-delivery-id="${o.id}" rows="3" dir="auto" placeholder="${tr('deliveryPlaceholder')}" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;background:var(--surface);color:var(--text);">${escapeHtml(o.delivery||'')}</textarea>
           <label class="btn btn-secondary" style="width:auto;padding:8px 14px;margin-top:8px;cursor:pointer;display:inline-block;">${tr('addDeliveryFiles')}<input type="file" multiple data-delivery-file="${o.id}" style="display:none"></label>
-          ${filesList}
+          ${fileButtons(true)}
           <button type="button" class="btn btn-secondary" data-action="send-delivery" data-id="${o.id}" style="margin-top:8px;">${tr('sendDelivery')}</button>
         </div>` : ((o.delivery || dFiles.length) ? `
         <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:8px;">
           <div style="font-size:12px;font-weight:700;margin-bottom:4px;">${tr('deliveryTitle')}</div>
           ${o.delivery ? `<div style="font-size:13px;white-space:pre-wrap;" dir="auto">${linkifyEsc(o.delivery)}</div>` : ''}
-          ${filesList}
+          ${fileButtons(false)}
         </div>` : '');
+
       return `
         <div class="order-row">
           <div class="order-top">
             <span class="order-service">${escapeHtml(o.serviceName)}</span>
-            <span class="status-badge status-${o.status}">${tr(STATUS_LABELS[o.status])}</span>
+            <span class="status-badge status-${st}">${tr(STATUS_LABELS[st])}</span>
           </div>
-          ${orderProgressHtml(o.status)}
+          ${orderProgressHtml(st)}
           <div class="order-sub">${isProvider ? tr('clientWord')+': '+escapeHtml(o.clientName) : tr('providerWord')+': '+escapeHtml(o.providerName)} · ${formatPrice(o.price)}</div>
-          ${paymentHtml}
+          ${stageHtml}
           <button type="button" class="btn btn-ghost" data-action="open-chat" data-id="${o.id}" style="margin:8px 0;">💬 ${tr('openChat')}</button>
           <button type="button" class="btn btn-ghost" data-action="open-report" data-type="order" data-id="${o.id}" data-name="${escapeHtml(o.serviceName)}" style="margin-bottom:4px;">${tr('reportBtn')}</button>
-          ${isProvider ? `
-            <select data-action="update-status" data-id="${o.id}" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;background:var(--surface);color:var(--text);">
-              <option value="pending" ${o.status==='pending'?'selected':''}>${tr('statusPending')}</option>
-              <option value="in_progress" ${o.status==='in_progress'?'selected':''}>${tr('statusInProgress')}</option>
-              <option value="done" ${o.status==='done'?'selected':''}>${tr('statusDone')}</option>
-            </select>
-          ` : (o.status==='done' && !hasReview(o.id) ? `
-            <button type="button" class="btn btn-secondary" data-action="open-review" data-id="${o.id}" style="margin-top:6px;">${tr('rateService')}</button>
-          ` : '')}
+          ${(!isProvider && st === 'done' && !hasReview(o.id)) ? `<button type="button" class="btn btn-secondary" data-action="open-review" data-id="${o.id}" style="margin-top:6px;">${tr('rateService')}</button>` : ''}
           ${deliveryHtml}
         </div>
       `;
@@ -1627,6 +1678,14 @@
     if(!v) return [];
     try{ const a = JSON.parse(v); return Array.isArray(a) ? a : []; }catch(e){ return []; }
   }
+  function deriveStatus(o){
+    if(o.clientConfirmed && o.providerConfirmed) return 'done';
+    if(o.delivery || parseDeliveryFiles(o.deliveryFiles).length) return 'delivered';
+    if(o.paymentStage === 'final') return o.paymentStatus === 'confirmed' ? 'in_progress' : 'awaiting_final';
+    if(o.paymentStatus === 'confirmed') return 'in_progress';
+    if(o.providerApproved && o.clientApproved) return 'awaiting_deposit';
+    return 'pending';
+  }
   function linkifyEsc(text){
     return escapeHtml(text).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener" style="color:var(--primary);word-break:break-all;">$1</a>');
   }
@@ -1664,6 +1723,22 @@
     await saveOrders();
     await saveNotifications();
     showSuccess(tr('deliveryFilesSaved'));
+    render();
+  }
+
+  async function updateOrderFlow(orderId, mutate){
+    const o = orders.find(x=>x.id===orderId);
+    if(!o) return;
+    const before = deriveStatus(o);
+    mutate(o);
+    const after = deriveStatus(o);
+    o.status = after;
+    if(after !== before){
+      const to = (o.clientId === profile.id) ? o.providerId : o.clientId;
+      notifications.push({id:uid(), userId:to, type:'status_changed', data:{serviceName:o.serviceName, status:after}, read:false, createdAt:Date.now()});
+      await saveNotifications();
+    }
+    await saveOrders();
     render();
   }
 
@@ -2223,6 +2298,28 @@
         render();
       }
     }
+    else if(action==='approve-order'){
+      const orderId = t.getAttribute('data-id');
+      const el = document.querySelector(`[data-deposit-id="${orderId}"]`);
+      const dep = Math.round(Number(el ? el.value : 0));
+      const cur = orders.find(o=>o.id===orderId);
+      if(!cur || !(dep > 0) || dep > Number(cur.price)){ showToast(tr('depositInvalid')); return; }
+      await updateOrderFlow(orderId, o=>{ o.deposit = dep; o.providerApproved = true; });
+      showToast(tr('orderApprovedToast'));
+    }
+    else if(action==='client-approve'){
+      await updateOrderFlow(t.getAttribute('data-id'), o=>{ o.clientApproved = true; });
+    }
+    else if(action==='request-final'){
+      await updateOrderFlow(t.getAttribute('data-id'), o=>{ o.paymentStage = 'final'; o.paymentStatus = 'not_paid'; o.paymentReference = ''; });
+      showToast(tr('finalRequestedToast'));
+    }
+    else if(action==='client-confirm'){
+      await updateOrderFlow(t.getAttribute('data-id'), o=>{ o.clientConfirmed = true; });
+    }
+    else if(action==='provider-confirm'){
+      await updateOrderFlow(t.getAttribute('data-id'), o=>{ o.providerConfirmed = true; });
+    }
     else if(action==='submit-payment'){
       const orderId = t.getAttribute('data-id');
       const ref = (paymentRefDrafts[orderId] || '').trim();
@@ -2244,6 +2341,7 @@
       const idx = orders.findIndex(o=>o.id===orderId);
       if(idx>-1){
         orders[idx].paymentStatus = 'confirmed';
+        orders[idx].status = deriveStatus(orders[idx]);
         notifications.push({id:uid(), userId:orders[idx].clientId, type:'payment_confirmed', data:{serviceName:orders[idx].serviceName}, read:false, createdAt:Date.now()});
         await saveOrders();
         await saveNotifications();
