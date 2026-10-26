@@ -300,6 +300,7 @@
     removeImage:{ar:'حذف الصورة', en:'Remove image'},
     addImage:{ar:'إضافة صورة', en:'Add image'},
     maxImages:{ar:'الحد الأقصى 5 صور', en:'Maximum 5 images'},
+    catSearchPlaceholder:{ar:'اكتب نوع الخدمة اللي تبيها في هذا التصنيف', en:'Type the service you need in this category'},
     confirmDeleteService:{ar:'متأكد تبي تحذف الخدمة؟ ما يمكن التراجع عنها.', en:'Delete this service? This cannot be undone.'},
     deliveryTitle:{ar:'التسليم', en:'Delivery'},
     deliveryPlaceholder:{ar:'اكتب ملاحظة التسليم، وأضف رابط الملفات (Drive أو غيره)', en:'Write a delivery note and add a link to the files (Drive or similar)'},
@@ -1193,7 +1194,8 @@
     return `
       ${renderHeader('home')}
       <div class="content">
-        <input type="text" class="search-input" id="search-input" placeholder="${tr('searchPlaceholder')}" value="${escapeHtml(searchQuery)}">
+        ${filterCategory !== 'all' ? `<div class="order-section-title" style="margin-top:4px;">${catInfo(filterCategory).icon} ${catInfo(filterCategory).label[lang]}</div>` : ''}
+        <input type="text" class="search-input" id="search-input" placeholder="${filterCategory !== 'all' ? tr('catSearchPlaceholder') : tr('searchPlaceholder')}" value="${escapeHtml(searchQuery)}">
         ${chips}
         <div>${listHtml}</div>
       </div>
