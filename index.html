@@ -300,6 +300,7 @@
     removeImage:{ar:'حذف الصورة', en:'Remove image'},
     addImage:{ar:'إضافة صورة', en:'Add image'},
     maxImages:{ar:'الحد الأقصى 5 صور', en:'Maximum 5 images'},
+    confirmDeleteService:{ar:'متأكد تبي تحذف الخدمة؟ ما يمكن التراجع عنها.', en:'Delete this service? This cannot be undone.'},
     deliveryTitle:{ar:'التسليم', en:'Delivery'},
     deliveryPlaceholder:{ar:'اكتب ملاحظة التسليم، وأضف رابط الملفات (Drive أو غيره)', en:'Write a delivery note and add a link to the files (Drive or similar)'},
     sendDelivery:{ar:'إرسال التسليم للعميل', en:'Send delivery to client'},
@@ -342,7 +343,7 @@
     pmTypeOther:{ar:'طريقة أخرى', en:'Other method'},
     pmAddMethod:{ar:'إضافة طريقة دفع', en:'Add payment method'},
     pmHolderName:{ar:'اسم صاحب الحساب', en:'Account holder name'},
-    pmNumber:{ar:'رقم الحساب أو الهاتف أو IBAN', en:'Account number, phone or IBAN'},
+    pmNumber:{ar:'رقم الحساب أو الهاتف أو BBAN', en:'Account number, phone or BBAN'},
     pmRemove:{ar:'حذف', en:'Remove'},
     pmMax:{ar:'الحد الأقصى 5 طرق دفع', en:'Maximum 5 payment methods'},
     accDeleteTitle:{ar:'حذف الحساب', en:'Delete account'},
@@ -1215,7 +1216,11 @@
         <div class="detail-price-box"><span>${tr('priceWord')}</span><span class="detail-price">${formatPrice(s.price)}</span></div>
         <div class="detail-desc">${escapeHtml(s.description)}</div>
         ${isOwner ? `
-          <div class="empty" style="padding:20px 0;"><div class="empty-sub">${tr('ownServiceNote')}</div></div>
+          <div class="my-service-actions" style="margin-top:14px;">
+            <button class="btn btn-secondary" data-action="edit-service" data-id="${s.id}" style="width:auto;flex:1;">${tr('editBtn')}</button>
+            <button class="btn btn-danger" data-action="delete-service" data-id="${s.id}" style="width:auto;flex:1;">${tr('deleteBtn')}</button>
+          </div>
+          <div class="empty" style="padding:12px 0;"><div class="empty-sub">${tr('ownServiceNote')}</div></div>
         ` : `<button class="btn btn-primary" data-action="place-order" data-id="${s.id}">${tr('orderBtn')}</button>`}
         <button type="button" class="btn btn-ghost" data-action="open-report" data-type="service" data-id="${s.id}" data-name="${escapeHtml(s.name)}" style="margin-top:10px;">${tr('reportBtn')}</button>
         <div class="order-section-title">${tr('reviewsTitle')}</div>
@@ -2174,7 +2179,9 @@
       view='service-form'; render();
     }
     else if(action==='delete-service'){
+      if(!confirm(tr('confirmDeleteService'))) return;
       services = services.filter(s=>s.id!==t.getAttribute('data-id'));
+      view = 'myservices';
       await saveServices();
       render();
       showToast(tr('deletedService'));
