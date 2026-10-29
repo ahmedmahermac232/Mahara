@@ -300,6 +300,9 @@
     removeImage:{ar:'حذف الصورة', en:'Remove image'},
     addImage:{ar:'إضافة صورة', en:'Add image'},
     maxImages:{ar:'الحد الأقصى 5 صور', en:'Maximum 5 images'},
+    logoutAllTitle:{ar:'تسجيل الخروج من كل الأجهزة', en:'Log out from all devices'},
+    confirmLogoutAll:{ar:'بيتم تسجيل خروجك من كل الأجهزة، بما فيها هذا الجهاز. متأكد؟', en:'You will be logged out of all devices, including this one. Continue?'},
+    loggedOutAll:{ar:'تم تسجيل الخروج من كل الأجهزة', en:'Logged out from all devices'},
     accLegal:{ar:'المساعدة والقانونية', en:'Help & legal'},
     privacyPolicyTitle:{ar:'سياسة الخصوصية', en:'Privacy policy'},
     termsTitle:{ar:'شروط الاستخدام', en:'Terms of use'},
@@ -1590,6 +1593,7 @@
       <div class="content">
         ${accPageHead('go-account', tr('accPrivacy'))}
         ${accRow('key', tr('accChangePwd'), 'go-change-password')}
+        ${accRow('lock', tr('logoutAllTitle'), 'logout-all')}
         <div data-action="go-delete-account" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--danger);border-radius:var(--radius);margin-top:18px;cursor:pointer;color:var(--danger);font-weight:600;">
           <span class="acc-icon" style="background:color-mix(in srgb, var(--danger) 12%, transparent);color:var(--danger);">${ICONS.trash}</span><span style="flex:1;">${tr('accDeleteTitle')}</span>
         </div>
@@ -2248,6 +2252,14 @@
     else if(action==='submit-change-password'){ await submitChangePassword(); }
     else if(action==='go-delete-account'){ daState={pw:''}; view='delete-account'; render(); }
     else if(action==='go-legal'){ view='legal'; render(); }
+    else if(action==='logout-all'){
+      if(!confirm(tr('confirmLogoutAll'))) return;
+      try{
+        const r = await api({action:'logoutAll'});
+        if(r && r.ok){ showToast(tr('loggedOutAll')); logout(); }
+        else showToast(tr('networkError'));
+      }catch(e){ showToast(tr('networkError')); }
+    }
     else if(action==='go-privacy-policy'){ view='privacy-policy'; render(); }
     else if(action==='go-terms'){ view='terms'; render(); }
     else if(action==='submit-delete-account'){ await deleteAccount(); }
