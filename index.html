@@ -901,6 +901,7 @@
     }
     view = profile ? 'home' : 'auth';
     render();
+    migrateOwnAvatar();
   }
 
   async function saveSettings(){ lsSet('settings', {lang, dark:darkMode}); }
@@ -1733,17 +1734,37 @@
       el.addEventListener('change', onEdit);
     });
   }
+  async function uploadAvatarDataUrl(dataUrl){
+    const blob = await (await fetch(dataUrl)).blob();
+    const up = await api({action:'avatarUploadUrl'});
+    if(!up || !up.ok) throw new Error('avatar_url');
+    const put = await fetch(up.signedUrl, {method:'PUT', headers:{'content-type':'image/jpeg'}, body: blob});
+    if(!put.ok) throw new Error('avatar_put ' + put.status);
+    return up.publicUrl;
+  }
+  async function migrateOwnAvatar(){
+    if(!profile || !String(profile.avatar||'').startsWith('data:')) return;
+    try{
+      profile.avatar = await uploadAvatarDataUrl(profile.avatar);
+      await saveUsers();
+    }catch(e){ console.error('avatar migrate failed', e); }
+  }
   async function savePersonal(){
     const name = (piState.name || '').trim();
     const age = String(piState.age || '').trim();
     if(!name){ showToast(tr('fillName')); return; }
     if(age && (!/^\d+$/.test(age) || Number(age) < 5 || Number(age) > 120)){ showToast(tr('accAgeInvalid')); return; }
+    let avatarVal = piState.avatar || '';
+    if(avatarVal.startsWith('data:')){
+      try{ avatarVal = await uploadAvatarDataUrl(avatarVal); }
+      catch(e){ console.error(e); showToast(tr('networkError')); return; }
+    }
     Object.assign(profile, {
       name: name,
       whatsapp: (piState.whatsapp || '').trim(),
       age: age,
       city: (piState.city || '').trim(),
-      avatar: piState.avatar || ''
+      avatar: avatarVal
     });
     await saveUsers();
     piState = null;
