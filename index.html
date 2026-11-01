@@ -1763,6 +1763,7 @@
       try{ avatarVal = await uploadAvatarDataUrl(avatarVal); }
       catch(e){ console.error(e); showToast(tr('networkError')); return; }
     }
+    const oldAvatar = profile.avatar || '';
     Object.assign(profile, {
       name: name,
       whatsapp: (piState.whatsapp || '').trim(),
@@ -1771,6 +1772,9 @@
       avatar: avatarVal
     });
     await saveUsers();
+    if(oldAvatar && oldAvatar !== avatarVal && oldAvatar.includes('/storage/v1/object/public/avatars/')){
+      api({action:'avatarCleanup', url: oldAvatar}).catch(e=>console.error(e));
+    }
     piState = null;
     showSuccess(tr('accSaved'));
     view = 'account'; render();
@@ -2429,6 +2433,10 @@
       const idx = orders.findIndex(o=>o.id===orderId);
       if(idx>-1){
         const list = parseDeliveryFiles(orders[idx].deliveryFiles);
+        const removed = list[i];
+        if(removed && removed.path){
+          try{ await api({action:'deliveryDeleteFile', path: removed.path}); }catch(e){ console.error(e); }
+        }
         list.splice(i,1);
         orders[idx].deliveryFiles = JSON.stringify(list);
         await saveOrders();
